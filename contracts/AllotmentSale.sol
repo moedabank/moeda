@@ -12,7 +12,7 @@ contract AllotmentSale is Ownable, SafeMath {
     uint public totalClaimed;
     uint public startBlock;
     uint public endBlock;
-    StandardToken public moedaToken;
+    MoedaToken public moedaToken;
     address public wallet;
     mapping (address => uint) public donations;
 
@@ -102,7 +102,8 @@ contract AllotmentSale is Ownable, SafeMath {
         if (!moedaToken.transfer(grantee, tokenCount)) throw;
     }
 
-    // safeguard against people sending coins from an exchange
+    /// Default function executed when sending to contract without arguments
+    /// always throw, to prevent people from sending coins from an exchange
     function() {
         throw;
     }
