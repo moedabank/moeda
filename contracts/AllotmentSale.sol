@@ -88,6 +88,7 @@ contract AllotmentSale is Ownable, SafeMath {
         donations[msg.sender] = msg.value;
     }
 
+    /// Claim tokens that were won during the auction.
     /// @param grantee address that will receive tokens
     function claim(address grantee) saleCompleted onlyDonor {
         if (grantee == 0) {
