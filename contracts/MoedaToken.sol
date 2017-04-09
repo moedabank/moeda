@@ -8,6 +8,7 @@ contract MoedaToken is StandardToken, Ownable {
     string public constant name = "MoedaToken";
     string public constant symbol = "MOE";
     uint8 public constant decimals = 18;
+    uint public constant MAX_TOKENS = 20000000 ether;
     AllotmentSale public allotmentSale;
 
     modifier isSaleOver() {
@@ -19,6 +20,7 @@ contract MoedaToken is StandardToken, Ownable {
 
     function MoedaToken(address _allotmentSale, uint supply) {
         if (_allotmentSale == address(0)) throw;
+        if (supply == 0 || supply > MAX_TOKENS) throw;
         allotmentSale = AllotmentSale(_allotmentSale);
         totalSupply = supply;
         balances[_allotmentSale] = totalSupply;
