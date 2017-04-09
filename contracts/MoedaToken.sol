@@ -21,12 +21,17 @@ contract MoedaToken is StandardToken, Ownable {
     function MoedaToken(address _allotmentSale, uint supply) {
         if (_allotmentSale == address(0)) throw;
         if (supply == 0 || supply > MAX_TOKENS) throw;
+ 
         allotmentSale = AllotmentSale(_allotmentSale);
         totalSupply = supply;
         balances[_allotmentSale] = totalSupply;
     }
 
-    function transfer(address _to, uint _value) isSaleOver returns(bool) {
-        return super.transfer(_to, _value);
+    function transfer(address _to, uint _value) isSaleOver {
+        super.transfer(_to, _value);
+    }
+
+    function transferFrom(address from, address to, uint value) isSaleOver {
+        super.transferFrom(from, to, value);
     }
 }
