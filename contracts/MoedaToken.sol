@@ -18,7 +18,7 @@ contract MoedaToken is StandardToken, Ownable {
     }
 
     function MoedaToken(address _allotmentSale, uint supply) {
-        if (_allotmentSale == 0) throw;
+        if (_allotmentSale == address(0)) throw;
         allotmentSale = AllotmentSale(_allotmentSale);
         totalSupply = supply;
         balances[_allotmentSale] = totalSupply;

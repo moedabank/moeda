@@ -53,7 +53,7 @@ contract AllotmentSale is Ownable, SafeMath {
         uint[] tokenAmounts
     ) {
         owner = msg.sender;
-        if (_wallet == 0) throw;
+        if (_wallet == address(0)) throw;
         if (_startBlock <= block.number) throw;
         if (_endBlock <= _startBlock) throw;
         if (owners.length != tokenAmounts.length) throw;
@@ -91,7 +91,7 @@ contract AllotmentSale is Ownable, SafeMath {
     /// Claim tokens that were won during the auction.
     /// @param grantee address that will receive tokens
     function claim(address grantee) saleCompleted onlyDonor {
-        if (grantee == 0) {
+        if (grantee == address(0)) {
             grantee = msg.sender;
         } 
 
