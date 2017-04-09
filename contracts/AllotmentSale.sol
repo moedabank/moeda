@@ -78,7 +78,7 @@ contract AllotmentSale is Ownable, SafeMath {
     /// was 100 ETH, that means he gets (5 / 100) * ICO_ALLOMENT tokens, a.k.a.
     /// 750,000 tokens.
     /// Transfer bid value to multi-signature wallet immediately
-    function buyTokens() isCrowdfundPeriod payable {
+    function placeBid() isCrowdfundPeriod payable {
         if (msg.value == 0) {
             throw;
         }
