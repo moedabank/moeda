@@ -93,7 +93,7 @@ contract AllotmentSale is Ownable, SafeMath {
     function claim(address grantee) saleCompleted onlyDonor {
         if (grantee == address(0)) {
             grantee = msg.sender;
-        } 
+        }
 
         uint tokenCount = safeMul(
             safeDiv(donations[grantee], totalReceived), ICO_ALLOMENT);
