@@ -6,7 +6,7 @@ pragma solidity ^0.4.8;
 
 contract AllotmentSale is Ownable, SafeMath {
     uint256 public constant TOTAL_SUPPLY = 20000000 ether;
-    uint256 public constant ICO_ALLOMENT = 15000000 ether;
+    uint256 public constant ICO_ALLOTMENT = 15000000 ether;
     uint256 public constant PRE_ALLOTMENT = 5000000 ether;
     uint256 public totalReceived;
     uint256 public totalClaimed;
@@ -68,7 +68,7 @@ contract AllotmentSale is Ownable, SafeMath {
         }
     }
 
-    function isSaleCompleted() returns (bool) {
+    function isSaleCompleted() constant returns (bool) {
         return block.number >= endBlock;
     }
 
@@ -88,7 +88,7 @@ contract AllotmentSale is Ownable, SafeMath {
         donations[msg.sender] = msg.value;
     }
 
-    function estimateAllotment(address owner) returns (uint256) {
+    function estimateAllotment(address owner) constant returns (uint256) {
         if(donations[owner] == 0) {
             return 0;
         }
