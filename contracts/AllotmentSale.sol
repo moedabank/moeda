@@ -88,6 +88,15 @@ contract AllotmentSale is Ownable, SafeMath {
         donations[msg.sender] = msg.value;
     }
 
+    function estimateAllotment(address owner) returns (uint256) {
+        if(donations[owner] == 0) {
+            return 0;
+        }
+
+        return safeDiv(
+            safeMul(donations[owner], ICO_ALLOTMENT), totalReceived);
+    }
+
     /// Claim tokens that were won during the auction.
     /// @param grantee address that will receive tokens
     function claim(address grantee) saleCompleted onlyDonor {
@@ -95,8 +104,11 @@ contract AllotmentSale is Ownable, SafeMath {
             grantee = msg.sender;
         }
 
-        uint256 tokenCount = safeDiv(
-            safeMul(donations[grantee], ICO_ALLOTMENT), totalReceived);
+        if (donations[msg.sender] == 0) {
+            throw;
+        }
+
+        uint256 tokenCount = estimateAllotment(msg.sender);
         donations[grantee] = 0;
         totalClaimed = safeAdd(totalClaimed, tokenCount);
         if (!moedaToken.transfer(grantee, tokenCount)) throw;
