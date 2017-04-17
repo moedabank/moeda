@@ -43,22 +43,26 @@ contract AllotmentSale is Ownable, SafeMath {
     /// @param _wallet address of multisig wallet that will receive donations
     /// @param _startBlock block number when sale starts
     /// @param _endBlock block number when sale ends
-    /// @param owners array of addresses for pre-sale investors
-    /// @param tokenAmounts array of token amounts for pre-sale investors
     function AllotmentSale(
         address _wallet,
         uint256 _startBlock,
-        uint256 _endBlock,
-        address[] owners,
-        uint256[] tokenAmounts
+        uint256 _endBlock
     ) {
         owner = msg.sender;
         if (_wallet == address(0)) throw;
         if (_startBlock <= block.number) throw;
         if (_endBlock <= _startBlock) throw;
-        if (owners.length != tokenAmounts.length) throw;
 
+        startBlock = _startBlock;
+        endBlock = _endBlock;
+        wallet = _wallet;
         moedaToken = new MoedaToken(this, TOTAL_SUPPLY);
+    }
+
+    /// @param owners array of addresses for pre-sale investors
+    /// @param tokenAmounts array of token amounts for pre-sale investors
+    function addPresaleHolders(address[] owners, uint256[] tokenAmounts) onlyOwner {
+        if (owners.length != tokenAmounts.length) throw;
 
         uint256 alloted = 0;
         for (uint i = 0; i < owners.length; i++) {
