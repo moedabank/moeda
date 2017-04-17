@@ -104,10 +104,6 @@ contract AllotmentSale is Ownable, SafeMath {
             grantee = msg.sender;
         }
 
-        if (donations[msg.sender] == 0) {
-            throw;
-        }
-
         uint256 tokenCount = estimateAllotment(msg.sender);
         donations[grantee] = 0;
         totalClaimed = safeAdd(totalClaimed, tokenCount);
