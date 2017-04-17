@@ -5,13 +5,13 @@ import './MoedaToken.sol';
 pragma solidity ^0.4.8;
 
 contract AllotmentSale is Ownable, SafeMath {
-    uint public constant TOTAL_SUPPLY = 20000000 ether;
-    uint public constant ICO_ALLOMENT = 15000000 ether;
-    uint public constant PRE_ALLOTMENT = 5000000 ether;
-    uint public totalReceived;
-    uint public totalClaimed;
-    uint public startBlock;
-    uint public endBlock;
+    uint256 public constant TOTAL_SUPPLY = 20000000 ether;
+    uint256 public constant ICO_ALLOMENT = 15000000 ether;
+    uint256 public constant PRE_ALLOTMENT = 5000000 ether;
+    uint256 public totalReceived;
+    uint256 public totalClaimed;
+    uint256 public startBlock;
+    uint256 public endBlock;
     MoedaToken public moedaToken;
     address public wallet;
     mapping (address => uint) public donations;
@@ -50,7 +50,7 @@ contract AllotmentSale is Ownable, SafeMath {
         uint256 _startBlock,
         uint256 _endBlock,
         address[] owners,
-        uint[] tokenAmounts
+        uint256[] tokenAmounts
     ) {
         owner = msg.sender;
         if (_wallet == address(0)) throw;
@@ -60,7 +60,7 @@ contract AllotmentSale is Ownable, SafeMath {
 
         moedaToken = new MoedaToken(this, TOTAL_SUPPLY);
 
-        uint alloted = 0;
+        uint256 alloted = 0;
         for (uint i = 0; i < owners.length; i++) {
             alloted = safeAdd(alloted, tokenAmounts[i]);
             if (alloted > PRE_ALLOTMENT) throw;
@@ -95,8 +95,8 @@ contract AllotmentSale is Ownable, SafeMath {
             grantee = msg.sender;
         }
 
-        uint tokenCount = safeMul(
-            safeDiv(donations[grantee], totalReceived), ICO_ALLOMENT);
+        uint256 tokenCount = safeDiv(
+            safeMul(donations[grantee], ICO_ALLOTMENT), totalReceived);
         donations[grantee] = 0;
         totalClaimed = safeAdd(totalClaimed, tokenCount);
         if (!moedaToken.transfer(grantee, tokenCount)) throw;
