@@ -5,7 +5,7 @@ import './AllotmentSale.sol';
 pragma solidity ^0.4.8;
 
 contract MoedaToken is StandardToken, Ownable {
-    string public constant name = "MoedaToken";
+    string public constant name = "Moedas";
     string public constant symbol = "MOE";
     uint8 public constant decimals = 18;
     uint public constant MAX_TOKENS = 20000000 ether;
