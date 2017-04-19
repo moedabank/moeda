@@ -59,19 +59,6 @@ contract AllotmentSale is Ownable, SafeMath {
         moedaToken = new MoedaToken(this, TOTAL_SUPPLY);
     }
 
-    /// @param owners array of addresses for pre-sale investors
-    /// @param tokenAmounts array of token amounts for pre-sale investors
-    function addPresaleHolders(address[] owners, uint256[] tokenAmounts) onlyOwner {
-        if (owners.length != tokenAmounts.length) throw;
-
-        uint256 alloted = 0;
-        for (uint i = 0; i < owners.length; i++) {
-            alloted = safeAdd(alloted, tokenAmounts[i]);
-            if (alloted > PRE_ALLOTMENT) throw;
-            moedaToken.transfer(owners[i], tokenAmounts[i]);
-        }
-    }
-
     function isSaleCompleted() constant returns (bool) {
         return block.number >= endBlock;
     }
