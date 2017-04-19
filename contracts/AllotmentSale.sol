@@ -5,17 +5,18 @@ import './MoedaToken.sol';
 pragma solidity ^0.4.8;
 
 contract AllotmentSale is Ownable, SafeMath {
-    uint256 public constant TOTAL_SUPPLY = 20000000 ether;
-    uint256 public constant ICO_ALLOTMENT = 15000000 ether;
-    uint256 public constant PRE_ALLOTMENT = 5000000 ether;
-    uint256 public totalReceived;
-    uint256 public totalClaimed;
-    uint256 public startBlock;
-    uint256 public endBlock;
-    MoedaToken public moedaToken;
-    address public wallet;
-    mapping (address => uint) public donations;
+    uint256 public constant MAX_TOKENS     = 20000000 ether;
+    uint256 public constant ICO_AMOUNT     = 15000000 ether; // amount assigned to the ICO
+    uint256 public constant PRESALE_AMOUNT =  5000000 ether; // amount assigned to presale
+    uint256 public totalReceived;   // total amount of ether received during sale
+    uint256 public totalClaimed;    // total amount of tokens claimed after sale has ended
+    uint256 public startBlock;      // block at which the sale starts
+    uint256 public endBlock;        // block at which the sale ends
+    MoedaToken public moedaToken;   // contract for the tokens being sold
+    address public wallet;          // multisig holder of all crowdsale funds
+    mapping (address => uint) public donations; // set of all buyers
 
+    // prevent operation if not within crowdsale period
     modifier isCrowdfundPeriod() {
         if (block.number < startBlock) {
             throw;
@@ -26,6 +27,7 @@ contract AllotmentSale is Ownable, SafeMath {
         _;
     }
 
+    // prevent operation after sale has ended
     modifier saleCompleted() {
         if (block.number < endBlock) {
             throw;
@@ -33,6 +35,7 @@ contract AllotmentSale is Ownable, SafeMath {
         _;
     }
 
+    // only allow people that have participated in the sale
     modifier onlyDonor() {
         if (donations[msg.sender] == 0) {
             throw;
@@ -56,11 +59,12 @@ contract AllotmentSale is Ownable, SafeMath {
         startBlock = _startBlock;
         endBlock = _endBlock;
         wallet = _wallet;
-        moedaToken = new MoedaToken(this, TOTAL_SUPPLY);
+        moedaToken = new MoedaToken(this, MAX_TOKENS);
     }
 
-    function isSaleCompleted() constant returns (bool) {
-        return block.number >= endBlock;
+    // Complete the sale, will unlock transactions in token contract
+    function finalize() onlyOwner saleCompleted {
+        moedaToken.unlock();
     }
 
     /// Place a bid for tokens, the amount received is based on bid amount 
@@ -79,13 +83,15 @@ contract AllotmentSale is Ownable, SafeMath {
         donations[msg.sender] = msg.value;
     }
 
+    // Estimate tokens that will be received by a given donor based on the
+    // current amount of received ether
+    // @param address address of a donor
     function estimateAllotment(address owner) constant returns (uint256) {
         if(donations[owner] == 0) {
             return 0;
         }
 
-        return safeDiv(
-            safeMul(donations[owner], ICO_ALLOTMENT), totalReceived);
+        return safeDiv(safeMul(donations[owner], ICO_AMOUNT), totalReceived);
     }
 
     /// Claim tokens that were won during the auction.
