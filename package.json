@@ -1,0 +1,26 @@
+{
+  "name": "moeda",
+  "version": "1.0.0",
+  "description": "To run the tests you need truffle and testrpc. You also need a recent version of node (probably at least 7.7.x) as we're using async/await, and some es6 syntax.",
+  "main": "truffle.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erkmos/moeda.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erkmos/moeda/issues"
+  },
+  "homepage": "https://github.com/erkmos/moeda#readme",
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "web3": "^0.18.4"
+  }
+}
