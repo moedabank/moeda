@@ -49,7 +49,7 @@ contract('Crowdsale', (accounts) => {
         });
 
         it('should return tier1 limit and tier0 rate for 0 <= total < ' + 
-            'TIER1_START',
+            'TIER0_CAP',
         async () => {
             const value = await instance.getLimitAndRate.call(0);
             const limit = web3.fromWei(value[0]).toString(10);
@@ -59,11 +59,11 @@ contract('Crowdsale', (accounts) => {
             assert.strictEqual(rate, '0.002');
         });
 
-        it('should return tier2 limit and tier1 rate for TIER1_START <= total' +
-            ' < TIER2_START',
+        it('should return tier2 limit and tier1 rate for TIER0_CAP <= total' +
+            ' < TIER1_CAP',
         async () => {
-            const tier1_start = await instance.TIER1_START.call();
-            const value = await instance.getLimitAndRate.call(tier1_start);
+            const TIER0_CAP = await instance.TIER0_CAP.call();
+            const value = await instance.getLimitAndRate.call(TIER0_CAP);
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 
@@ -71,11 +71,11 @@ contract('Crowdsale', (accounts) => {
             assert.strictEqual(rate, '0.006');
         });
 
-        it('should return tier3 limit and tier2 rate for TIER2_START <= total' +
-            ' < TIER3_START',
+        it('should return tier3 limit and tier2 rate for TIER1_CAP <= total' +
+            ' < TIER2_CAP',
         async () => {
-            const tier2_start = await instance.TIER2_START.call();
-            const value = await instance.getLimitAndRate.call(tier2_start);
+            const TIER1_CAP = await instance.TIER1_CAP.call();
+            const value = await instance.getLimitAndRate.call(TIER1_CAP);
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 
@@ -83,11 +83,11 @@ contract('Crowdsale', (accounts) => {
             assert.strictEqual(rate, '0.008');
         });
 
-        it('should return ether cap limit and tier3 rate for TIER3_START <= ' +
+        it('should return ether cap limit and tier3 rate for TIER2_CAP <= ' +
             'total < ETHER_CAP',
         async () => {
-            const tier3_start = await instance.TIER3_START.call();
-            const value = await instance.getLimitAndRate.call(tier3_start);
+            const TIER2_CAP = await instance.TIER2_CAP.call();
+            const value = await instance.getLimitAndRate.call(TIER2_CAP);
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 

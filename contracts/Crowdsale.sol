@@ -24,10 +24,10 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER3_RATE  = 10 finney;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER1_START = 10000 ether; // TIER0 cap
-    uint256 public constant TIER2_START = 30000 ether; // TIER1 cap
-    uint256 public constant TIER3_START = 40000 ether; // TIER2 cap
-    uint256 public constant ETHER_CAP   = 50000 ether; // Total ether cap
+    uint256 public constant TIER0_CAP = 10000 ether;
+    uint256 public constant TIER1_CAP = 30000 ether;
+    uint256 public constant TIER2_CAP = 40000 ether;
+    uint256 public constant ETHER_CAP = 50000 ether; // Total ether cap
 
 
     modifier onlyDuringSale() {
@@ -63,16 +63,16 @@ contract Crowdsale is Ownable, SafeMath {
         uint256 limit = 0;
         uint256 rate = 0;
 
-        if (totalReceived < TIER1_START) {
-            limit = TIER1_START;
+        if (totalReceived < TIER0_CAP) {
+            limit = TIER0_CAP;
             rate = TIER0_RATE;
         }
-        else if (totalReceived < TIER2_START) {
-            limit = TIER2_START;
+        else if (totalReceived < TIER1_CAP) {
+            limit = TIER1_CAP;
             rate = TIER1_RATE;
         }
-        else if (totalReceived < TIER3_START) {
-            limit = TIER3_START;
+        else if (totalReceived < TIER2_CAP) {
+            limit = TIER2_CAP;
             rate = TIER2_RATE;
         }
         else if (totalReceived < ETHER_CAP) {

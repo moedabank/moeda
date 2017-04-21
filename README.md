@@ -1,9 +1,9 @@
 # Moeda crowdsale contracts
 
-To run you need truffle and OpenZeppelin
+To run the tests you need truffle, OpenZeppelin and testrpc
 
 ```
+npm i -g truffle@beta ethereumjs-testrpc
 cd moeda
-npm i -g truffle@beta
 truffle install zeppelin
 ```
