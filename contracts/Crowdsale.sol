@@ -17,15 +17,15 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant MINIMUM_BUY = 1 ether;
 
     // token creation rates
-    uint256 public constant TIER0_RATE  = 2 finney;
-    uint256 public constant TIER1_RATE  = 6 finney;
-    uint256 public constant TIER2_RATE  = 8 finney;
-    uint256 public constant TIER3_RATE  = 10 finney;
+    uint256 public constant TIER0_RATE = 2 finney;
+    uint256 public constant TIER1_RATE = 6 finney;
+    uint256 public constant TIER2_RATE = 8 finney;
+    uint256 public constant TIER3_RATE = 10 finney;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER0_CAP = 10000 ether;
-    uint256 public constant TIER1_CAP = 40000 ether;
-    uint256 public constant TIER2_CAP = 80000 ether;
+    uint256 public constant TIER0_CAP =  10000 ether;
+    uint256 public constant TIER1_CAP =  40000 ether;
+    uint256 public constant TIER2_CAP =  80000 ether;
     uint256 public constant ETHER_CAP = 130000 ether; // Total ether cap
 
     modifier onlyDuringSale() {
