@@ -24,9 +24,9 @@ contract Crowdsale is Ownable, SafeMath {
 
     // limits for each pricing tier (how much can be bought)
     uint256 public constant TIER0_CAP = 10000 ether;
-    uint256 public constant TIER1_CAP = 30000 ether;
-    uint256 public constant TIER2_CAP = 40000 ether;
-    uint256 public constant ETHER_CAP = 50000 ether; // Total ether cap
+    uint256 public constant TIER1_CAP = 40000 ether;
+    uint256 public constant TIER2_CAP = 80000 ether;
+    uint256 public constant ETHER_CAP = 130000 ether; // Total ether cap
 
     modifier onlyDuringSale() {
         if (block.number < startBlock) {

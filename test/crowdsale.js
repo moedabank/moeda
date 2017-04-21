@@ -66,7 +66,7 @@ contract('Crowdsale', (accounts) => {
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 
-            assert.strictEqual(limit, '30000');
+            assert.strictEqual(limit, '40000');
             assert.strictEqual(rate, '0.006');
         });
 
@@ -78,7 +78,7 @@ contract('Crowdsale', (accounts) => {
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 
-            assert.strictEqual(limit, '40000');
+            assert.strictEqual(limit, '80000');
             assert.strictEqual(rate, '0.008');
         });
 
@@ -90,7 +90,7 @@ contract('Crowdsale', (accounts) => {
             const limit = web3.fromWei(value[0]).toString(10);
             const rate = web3.fromWei(value[1]).toString(10);
 
-            assert.strictEqual(limit, '50000');
+            assert.strictEqual(limit, '130000');
             assert.strictEqual(rate, '0.01');
         });
 
@@ -165,19 +165,19 @@ contract('Crowdsale', (accounts) => {
             // 100 ether received previously, try to spend 39800 ether
             // this should overlap tier 0, 1 and 2
             const amount = await instance.getTokenAmount.call(
-                web3.toWei(100), web3.toWei(39800));
+                web3.toWei(100), web3.toWei(49800));
             const tier0_rate = await instance.TIER0_RATE.call();
             const tier1_rate = await instance.TIER1_RATE.call();
             const tier2_rate = await instance.TIER2_RATE.call();
 
             // we should get 
             //  9900 eth worth of tokens at the tier 0 rate
-            // 20000 eth worth of tokens at the tier 1 rate
+            // 30000 eth worth of tokens at the tier 1 rate
             //  9900 eth worth of tokens at the tier 2 rate
             const amountAtTier0 = web3.toBigNumber(
                 web3.toWei(9900)).div(tier0_rate);
             const amountAtTier1 = web3.toBigNumber(
-                web3.toWei(20000)).div(tier1_rate);
+                web3.toWei(30000)).div(tier1_rate);
             const amountAtTier2 = web3.toBigNumber(
                 web3.toWei(9900)).div(tier2_rate);
             const expectedAmount = web3.toWei(
@@ -193,7 +193,7 @@ contract('Crowdsale', (accounts) => {
             // 0 ether received previously, try to spend 44800 ether
             // this should overlap tier 0, 1, 2 and 3
             const amount = await instance.getTokenAmount.call(
-                0, web3.toWei(44800));
+                0, web3.toWei(84800));
             const tier0_rate = await instance.TIER0_RATE.call();
             const tier1_rate = await instance.TIER1_RATE.call();
             const tier2_rate = await instance.TIER2_RATE.call();
@@ -201,15 +201,15 @@ contract('Crowdsale', (accounts) => {
 
             // we should get 
             // 10000 eth worth of tokens at the tier 0 rate
-            // 20000 eth worth of tokens at the tier 1 rate
-            // 10000 eth worth of tokens at the tier 2 rate
+            // 30000 eth worth of tokens at the tier 1 rate
+            // 40000 eth worth of tokens at the tier 2 rate
             //  4800 eth worth of tokens at the tier 3 rate
             const amountAtTier0 = web3.toBigNumber(
                 web3.toWei(10000)).div(tier0_rate);
             const amountAtTier1 = web3.toBigNumber(
-                web3.toWei(20000)).div(tier1_rate);
+                web3.toWei(30000)).div(tier1_rate);
             const amountAtTier2 = web3.toBigNumber(
-                web3.toWei(10000)).div(tier2_rate);
+                web3.toWei(40000)).div(tier2_rate);
             const amountAtTier3 = web3.toBigNumber(
                 web3.toWei(4800)).div(tier3_rate);
             const expectedAmount = web3.toWei(
@@ -226,7 +226,7 @@ contract('Crowdsale', (accounts) => {
             try {
                 const donation = web3.toBigNumber('4999999999999999999999');
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(45000), donation);
+                    web3.toWei(125000), donation);
                 const tier3_rate = await instance.TIER3_RATE.call();
 
                 // should get 49999.99999999999999999 worth at the tier 3 rate
@@ -244,7 +244,7 @@ contract('Crowdsale', (accounts) => {
         async () => {
             try {
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(45000),
+                    web3.toWei(125000),
                     web3.toWei(5000));
                 const tier3_rate = await instance.TIER3_RATE.call();
 
@@ -262,8 +262,9 @@ contract('Crowdsale', (accounts) => {
             // try to buy so much that we exceed the total cap
             try {
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(45000),
+                    web3.toWei(125000),
                     '5000000000000000000001');
+                fail('should have thrown')
             } catch (error) {
                 assert.include(error.message, 'invalid JUMP');
             }
