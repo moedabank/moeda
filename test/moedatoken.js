@@ -1,4 +1,7 @@
 const MoedaToken = artifacts.require('./MoedaToken');
+const utils = require('./utils');
+const fail = utils.fail;
+const assertVmException = utils.assertVmException;
 
 contract('MoedaToken', (accounts) => {
     describe('constructor', () => {
@@ -28,7 +31,9 @@ contract('MoedaToken', (accounts) => {
     });
 
     describe('transfer', () => {
-        it('should throw if crowdsale is active');
+        it('should throw if crowdsale is active', async () => {
+            
+        });
         it('should not throw once crowdsale is over');
         it('should call transfer in super class');
     });
@@ -38,6 +43,10 @@ contract('MoedaToken', (accounts) => {
         it('should not throw once crowdsale is over');
         it('should call transferFrom in super class');
     });
+});
+
+contract('Moedatoken, sale is over', (accounts) => {
+    
 });
 
 // these need to happen on fresh contracts, and truffle makes it kind of awkward

@@ -1,6 +1,8 @@
 const Crowdsale = artifacts.require('./Crowdsale');
 const MoedaToken = artifacts.require('./MoedaToken');
-
+const utils = require('./utils');
+const fail = utils.fail;
+const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 contract('Crowdsale', (accounts) => {
@@ -409,14 +411,6 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
         }
     });
 });
-
-function fail(message) {
-    throw new Error(message);
-}
-
-function assertVmException(error) {
-    assert.include(error.message, 'invalid JUMP');
-}
 
 async function fastForwardToBlock(instance, blockAttributeName, accounts) {
     const currentBlock = web3.eth.blockNumber;
