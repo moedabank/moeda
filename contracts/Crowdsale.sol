@@ -5,6 +5,7 @@ import './MoedaToken.sol';
 pragma solidity ^0.4.8;
 
 contract Crowdsale is Ownable, SafeMath {
+    bool public crowdsaleClosed;  // whether the crowdsale has been closed manually
     address public wallet; // recipient of all crowdsale funds
     MoedaToken public moedaToken; // token that will be sold during sale
     uint256 public etherReceived;       // total ether received
@@ -31,9 +32,14 @@ contract Crowdsale is Ownable, SafeMath {
     event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
 
     modifier onlyDuringSale() {
+        if (crowdsaleClosed) {
+            throw;
+        }
+
         if (block.number < startBlock) {
             throw;
         }
+
         if (block.number >= endBlock) {
             throw;
         }
@@ -49,6 +55,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (_startBlock <= block.number) throw;
         if (_endBlock <= _startBlock) throw;
         
+        crowdsaleClosed = false;
         wallet = _wallet;
         moedaToken = new MoedaToken();
         startBlock = _startBlock;
@@ -130,5 +137,13 @@ contract Crowdsale is Ownable, SafeMath {
     // always throw, this will prevent sending ether from an exchange
     function () {
         throw;
+    }
+
+    // close the crowdsale and unlock the tokens
+    function finalize() onlyOwner {
+        if (block.number < startBlock) throw;
+        if (crowdsaleClosed) throw;
+        if(!moedaToken.unlock()) throw;
+        crowdsaleClosed = true;
     }
 }

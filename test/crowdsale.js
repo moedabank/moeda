@@ -27,6 +27,12 @@ contract('Crowdsale', (accounts) => {
             assert.notStrictEqual(wallet, NULL_ADDRESS)
         });
 
+        it('should assign crowdsale closed boolean', async () => {
+            const crowdsaleClosed = await instance.crowdsaleClosed.call();
+
+            assert.strictEqual(crowdsaleClosed, false);
+        });
+
         it('should assign startBlock', async () => {
             const block = await instance.startBlock.call();
             assert.notStrictEqual(block.toNumber(), 0);
@@ -336,6 +342,47 @@ contract('Crowdsale.buy(), after sale has ended', (accounts) => {
 
             const amount = await instance.etherReceived.call();
             assert.strictEqual(amount.toNumber(), 0);
+        }
+    });
+});
+
+contract('Crowdsale.finalize() before sale period', (accounts) => {
+    it('should throw', async () => {
+        const instance = await Crowdsale.deployed();
+
+        try {
+            await instance.finalize({ from: accounts[0]});
+        } catch (error) {
+            assertVmException(error);
+        }
+    });
+});
+
+contract('Crowdsale.finalize() during sale period', (accounts) => {
+    let instance;        
+
+    before(async () => {
+        instance = await Crowdsale.deployed();
+        await fastForwardToBlock(instance, 'startBlock', accounts);
+    });
+    
+    it('should set crowd sale to closed and unlock tokens', async () => {
+        await instance.finalize({ from: accounts[0] });
+
+        const crowdsaleClosed = await instance.crowdsaleClosed.call();
+        assert.isTrue(crowdsaleClosed);
+
+        const tokenAddress = await instance.moedaToken.call();
+        const token = MoedaToken.at(tokenAddress);
+        const locked = await token.locked.call();
+        assert.isFalse(locked);
+    });
+
+    it('should throw when already disabled', async () => {
+        try {
+            await instance.finalize({ from: accounts[0] });
+        } catch (error) {
+            assertVmException(error);
         }
     });
 });

@@ -31,8 +31,9 @@ contract MoedaToken is StandardToken, Ownable {
     }
 
     // called manually once sale has ended, this will unlock transfers
-    function unlock() onlyOwner {
+    function unlock() onlyOwner returns (bool) {
         locked = false;
+        return true;
     }
 
     function create(address recipient, uint256 amount) onlyOwner onlyDuringSale returns(bool) {
