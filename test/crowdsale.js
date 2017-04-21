@@ -352,7 +352,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
         try {
             await instance.buy({ 
                 from: accounts[2],
-                value: web3.toWei('0.99')
+                value: web3.toWei('0.19')
             });
         } catch (error) {
             assertVmException(error);

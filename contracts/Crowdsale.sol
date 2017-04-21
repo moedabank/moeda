@@ -14,7 +14,7 @@ contract Crowdsale is Ownable, SafeMath {
     mapping (address => uint256) public donors;
     
     // smallest possible donation
-    uint256 public constant MINIMUM_BUY = 1 ether;
+    uint256 public constant MINIMUM_BUY = 200 finney;
 
     // token creation rates
     uint256 public constant TIER0_RATE = 2 finney;
