@@ -6,22 +6,29 @@ import 'zeppelin/MultisigWallet.sol';
 pragma solidity ^0.4.8;
 
 contract Crowdsale is Ownable, SafeMath {
-    MultisigWallet public wallet; // recipient of all funds
-    MoedaToken public moedaToken; // tokens that will be sold during sale
-    uint256 public constant MINIMUM_BUY = 1 ether;
-    uint256 public constant TIER0_RATE  = 2 finney;
-    uint256 public constant TIER1_RATE  = 6 finney;
-    uint256 public constant TIER2_RATE  = 8 finney;
-    uint256 public constant TIER3_RATE  = 10 finney;
-    uint256 public constant TIER1_START = 10000 ether;
-    uint256 public constant TIER2_START = 30000 ether;
-    uint256 public constant TIER3_START = 40000 ether;
-    uint256 public constant ETHER_CAP   = 50000 ether;
+    MultisigWallet public wallet; // recipient of all crowdsale funds
+    MoedaToken public moedaToken; // token that will be sold during sale
     uint256 public etherReceived;       // total ether received
     uint256 public totalTokensSold;     // number of tokens sold
     uint256 public startBlock;          // block where sale starts
     uint256 public endBlock;            // block where sale ends
     mapping (address => uint256) public donors;
+    
+    // smallest possible donation
+    uint256 public constant MINIMUM_BUY = 1 ether;
+
+    // token creation rates
+    uint256 public constant TIER0_RATE  = 2 finney;
+    uint256 public constant TIER1_RATE  = 6 finney;
+    uint256 public constant TIER2_RATE  = 8 finney;
+    uint256 public constant TIER3_RATE  = 10 finney;
+
+    // limits for each pricing tier (how much can be bought)
+    uint256 public constant TIER1_START = 10000 ether; // TIER0 cap
+    uint256 public constant TIER2_START = 30000 ether; // TIER1 cap
+    uint256 public constant TIER3_START = 40000 ether; // TIER2 cap
+    uint256 public constant ETHER_CAP   = 50000 ether; // Total ether cap
+
 
     modifier onlyDuringSale() {
         if (block.number < startBlock) {
@@ -33,6 +40,7 @@ contract Crowdsale is Ownable, SafeMath {
         _;
     }
 
+    // Initialize a new Crowdsale contract
     // @param _wallet address of multisig wallet that will store received ether
     // @param _startBlock block at which to start the sale
     // @param _endBlock block at which to end the sale
@@ -85,7 +93,7 @@ contract Crowdsale is Ownable, SafeMath {
     // 4. if there is any ether left, start over from 1, with the remaining ether
     // 5. return the amount of tokens bought
     // @param totalReceived ether received by contract plus spent by this donation
-    // @param requestedAmount total ether to spent on tokens in a donation
+    // @param requestedAmount total ether to spend on tokens in a donation
     function getTokenAmount(uint256 totalReceived, uint256 requestedAmount) 
     constant returns (uint256) {
         if (requestedAmount == 0) return 0;
@@ -103,6 +111,7 @@ contract Crowdsale is Ownable, SafeMath {
         return safeAdd(tokensToReceiveAtCurrentPrice, additionalTokens);
     }
 
+    // Used while the crowdsale is active to trade ether for tokens
     function buy() payable onlyDuringSale {
         if (msg.value < MINIMUM_BUY) throw;
         if (safeAdd(etherReceived, msg.value) > ETHER_CAP) throw;
