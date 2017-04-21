@@ -1,12 +1,11 @@
-import 'zeppelin/SafeMath.sol';
-import 'zeppelin/ownership/Ownable.sol';
+import './SafeMath.sol';
+import './Ownable.sol';
 import './MoedaToken.sol';
-import 'zeppelin/MultisigWallet.sol';
 
 pragma solidity ^0.4.8;
 
 contract Crowdsale is Ownable, SafeMath {
-    MultisigWallet public wallet; // recipient of all crowdsale funds
+    address public wallet; // recipient of all crowdsale funds
     MoedaToken public moedaToken; // token that will be sold during sale
     uint256 public etherReceived;       // total ether received
     uint256 public totalTokensSold;     // number of tokens sold
@@ -29,7 +28,6 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER2_CAP = 40000 ether;
     uint256 public constant ETHER_CAP = 50000 ether; // Total ether cap
 
-
     modifier onlyDuringSale() {
         if (block.number < startBlock) {
             throw;
@@ -49,7 +47,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (_startBlock <= block.number) throw;
         if (_endBlock <= _startBlock) throw;
         
-        wallet = MultisigWallet(_wallet);
+        wallet = _wallet;
         moedaToken = new MoedaToken();
         startBlock = _startBlock;
         endBlock = _endBlock;
