@@ -1,16 +1,14 @@
 import 'zeppelin/token/StandardToken.sol';
 import 'zeppelin/ownership/Ownable.sol';
-import './AllotmentSale.sol';
 
 pragma solidity ^0.4.8;
 
 contract MoedaToken is StandardToken, Ownable {
-    string public constant name = "Moedas";
-    string public constant symbol = "MOE";
+    string public constant name = "Moeda Loalty Points";
+    string public constant symbol = "MLO";
     uint8 public constant decimals = 18;
     uint public constant MAX_TOKENS = 20000000 ether;
     bool public locked;
-    AllotmentSale public allotmentSale;
 
     // determine whether transfers can be made
     modifier onlyAfterSale() {
@@ -20,21 +18,31 @@ contract MoedaToken is StandardToken, Ownable {
         _;
     }
 
-    // @param _allotmentSale address of parent crowdsale contract
-    // @param supply total amount of tokens to create
-    function MoedaToken(address _allotmentSale, uint supply) {
-        if (_allotmentSale == address(0)) throw;
-        if (supply == 0 || supply > MAX_TOKENS) throw;
- 
-        allotmentSale = AllotmentSale(_allotmentSale);
-        totalSupply = supply;
-        balances[_allotmentSale] = totalSupply;
+    modifier onlyDuringSale() {
+        if (!locked) {
+            throw;
+        }
+        _;
+    }
+
+    // Create moeda token, set 
+    function MoedaToken() {
         locked = true;
     }
 
     // called manually once sale has ended, this will unlock transfers
     function unlock() onlyOwner {
         locked = false;
+    }
+
+    function create(address recipient, uint256 amount) onlyOwner onlyDuringSale returns(bool) {
+        if (amount == 0) throw;
+        if (totalSupply + amount > MAX_TOKENS) throw;
+
+        balances[recipient] = safeAdd(balances[recipient], amount);
+        totalSupply = safeAdd(totalSupply, amount);
+        Transfer(0, recipient, amount);
+        return true;
     }
 
     // transfer tokens
