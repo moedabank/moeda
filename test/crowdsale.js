@@ -300,7 +300,13 @@ contract('Crowdsale', (accounts) => {
     });
 
     describe('default method', () => {
-        it('should throw', () => {
+        it('should throw', async () => {
+            const instance = await Crowdsale.deployed();
+            try {
+                await instance.sendTransaction({ from: accounts[0] });
+            } catch (error) {
+                assert.include(error.message, 'invalid JUMP');
+            }
         });
     })
 });
