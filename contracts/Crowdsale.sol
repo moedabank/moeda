@@ -28,6 +28,8 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER2_CAP =  80000 ether;
     uint256 public constant ETHER_CAP = 130000 ether; // Total ether cap
 
+    event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
+
     modifier onlyDuringSale() {
         if (block.number < startBlock) {
             throw;
@@ -121,6 +123,8 @@ contract Crowdsale is Ownable, SafeMath {
         if (!moedaToken.create(msg.sender, tokenAmount)) throw;
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
+
+        Buy(msg.sender, msg.value, tokenAmount);
     }
 
     // always throw, this will prevent sending ether from an exchange
