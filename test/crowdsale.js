@@ -298,6 +298,7 @@ contract('Crowdsale', (accounts) => {
             const instance = await Crowdsale.deployed();
             try {
                 await instance.sendTransaction({ from: accounts[0] });
+                fail('should have thrown');
             } catch (error) {
                 assertVmException(error);
             }
@@ -318,6 +319,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
 
         try {
             await instance.buy({ value: web3.toWei(1), from: accounts[1] });
+            fail('should have thrown');
         } catch (error) {
             assertVmException(error);
         }
@@ -381,6 +383,7 @@ contract('Crowdsale.finalize() during sale period', (accounts) => {
     it('should throw when already disabled', async () => {
         try {
             await instance.finalize({ from: accounts[0] });
+            fail('should have thrown');
         } catch (error) {
             assertVmException(error);
         }
@@ -401,6 +404,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
                 from: accounts[2],
                 value: web3.toWei('0.19')
             });
+            fail('should have thrown');
         } catch (error) {
             assertVmException(error);
         }
@@ -413,6 +417,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
                 from: accounts[1],
                 value: web3.toWei(131000)
             });
+            fail('should have thrown');
         } catch (error) {
             assertVmException(error);
         }
@@ -453,6 +458,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
                 from: accounts[2],
                 value: web3.toWei('30')
             });
+            fail('should have thrown');
         } catch (error) {
             assertVmException(error);
         }

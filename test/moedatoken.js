@@ -34,6 +34,7 @@ contract('MoedaToken', (accounts) => {
             try {
                 await instance.create(
                     accounts[2], maxTokens.plus(1), { from: accounts[0] });
+                fail('should have thrown');
             } catch (error) {
                 assertVmException(error);
             }
@@ -64,6 +65,7 @@ contract('MoedaToken', (accounts) => {
             try {
                 await instance.create(
                         accounts[1], web3.toWei(500), { from: accounts[1] });
+                fail('should have thrown');
             } catch (error) {
                 assertVmException(error);
             }
@@ -132,6 +134,7 @@ contract('Moedatoken, sale is over', (accounts) => {
             try {
                 await instance.create(
                         accounts[1], web3.toWei(500), { from: accounts[0] });
+                fail('should have thrown');
             } catch (error) {
                 assertVmException(error);
             }
