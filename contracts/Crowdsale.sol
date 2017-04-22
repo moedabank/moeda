@@ -111,7 +111,7 @@ contract Crowdsale is Ownable, SafeMath {
         uint256 maxETHSpendableInTier = safeSub(limit, totalReceived);
         uint256 amountToSpend = min256(maxETHSpendableInTier, requestedAmount);
         uint256 tokensToReceiveAtCurrentPrice = safeDiv(
-            amountToSpend * 1 ether, rate);
+            safeMul(amountToSpend, 1 ether), rate);
         uint256 additionalTokens = getTokenAmount(
             safeAdd(totalReceived, amountToSpend),
             safeSub(requestedAmount, amountToSpend));
