@@ -266,7 +266,7 @@ contract('Crowdsale', (accounts) => {
         });
 
         it('should throw if total requested would exceed cap', async () => {
-            // we're in tier 3, 45000 ether invested so far
+            // we're in tier 3, 125000 ether invested so far
             // try to buy so much that we exceed the total cap
             try {
                 const amount = await instance.getTokenAmount.call(
