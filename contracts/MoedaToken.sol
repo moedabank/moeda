@@ -3,11 +3,16 @@ import './Ownable.sol';
 
 pragma solidity ^0.4.8;
 
+/// @title Moeda Loaylty Points token contract
 contract MoedaToken is StandardToken, Ownable {
     string public constant name = "Moeda Loalty Points";
     string public constant symbol = "MLO";
     uint8 public constant decimals = 18;
+
+    // don't allow creation of more than this number of tokens
     uint public constant MAX_TOKENS = 20000000 ether;
+    
+    // whether transfers are locked
     bool public locked;
 
     // determine whether transfers can be made
@@ -25,17 +30,22 @@ contract MoedaToken is StandardToken, Ownable {
         _;
     }
 
-    // Create moeda token, set 
+    /// @dev Create moeda token and lock transfers
     function MoedaToken() {
         locked = true;
     }
 
-    // called manually once sale has ended, this will unlock transfers
+    /// @dev unlock transfers
+    /// @return true if successful
     function unlock() onlyOwner returns (bool) {
         locked = false;
         return true;
     }
 
+    /// @dev create tokens, only usable while locked
+    /// @param recipient address that will receive the created tokens
+    /// @param amount the number of tokens to create
+    /// @return true if successful
     function create(address recipient, uint256 amount) onlyOwner onlyDuringSale returns(bool) {
         if (amount == 0) throw;
         if (totalSupply + amount > MAX_TOKENS) throw;

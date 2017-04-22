@@ -4,6 +4,7 @@ import './MoedaToken.sol';
 
 pragma solidity ^0.4.8;
 
+/// @title Moeda crowdsale
 contract Crowdsale is Ownable, SafeMath {
     bool public crowdsaleClosed;  // whether the crowdsale has been closed manually
     address public wallet; // recipient of all crowdsale funds
@@ -46,10 +47,10 @@ contract Crowdsale is Ownable, SafeMath {
         _;
     }
 
-    // Initialize a new Crowdsale contract
-    // @param _wallet address of multisig wallet that will store received ether
-    // @param _startBlock block at which to start the sale
-    // @param _endBlock block at which to end the sale
+    /// @dev Initialize a new Crowdsale contract
+    /// @param _wallet address of multisig wallet that will store received ether
+    /// @param _startBlock block at which to start the sale
+    /// @param _endBlock block at which to end the sale
     function Crowdsale(address _wallet, uint _startBlock, uint _endBlock) {
         if (_wallet == address(0)) throw;
         if (_startBlock <= block.number) throw;
@@ -62,9 +63,10 @@ contract Crowdsale is Ownable, SafeMath {
         endBlock = _endBlock;
     }
 
-    // Determine the lowest rate to acquire tokens given an amount of donated
-    // ethers
-    // @param totalReceived amount of ether that has been received
+    /// @dev Determine the lowest rate to acquire tokens given an amount of 
+    /// donated ethers
+    /// @param totalReceived amount of ether that has been received
+    /// @return pair of the current tier's donation limit and a token creation rate
     function getLimitAndRate(uint256 totalReceived)
     constant returns (uint256, uint256) {
         uint256 limit = 0;
@@ -92,15 +94,16 @@ contract Crowdsale is Ownable, SafeMath {
         return (limit, rate);
     }
 
-    // Determine how many tokens we can get from each pricing tier, in case a
-    // donation's amount overlaps multiple pricing tiers.
-    // 1. determine cheapest token price
-    // 2. determine how many tokens can be bought at this price
-    // 3. subtract spent ether from requested amount
-    // 4. if there is any ether left, start over from 1, with the remaining ether
-    // 5. return the amount of tokens bought
-    // @param totalReceived ether received by contract plus spent by this donation
-    // @param requestedAmount total ether to spend on tokens in a donation
+    /// @dev Determine how many tokens we can get from each pricing tier, in case a
+    /// donation's amount overlaps multiple pricing tiers.
+    /// 1. determine cheapest token price
+    /// 2. determine how many tokens can be bought at this price
+    /// 3. subtract spent ether from requested amount
+    /// 4. if there is any ether left, start over from 1, with the remaining ether
+    /// 5. return the amount of tokens bought
+    /// @param totalReceived ether received by contract plus spent by this donation
+    /// @param requestedAmount total ether to spend on tokens in a donation
+    /// @return amount of tokens to get for the requested ether donation
     function getTokenAmount(uint256 totalReceived, uint256 requestedAmount) 
     constant returns (uint256) {
         if (requestedAmount == 0) return 0;
@@ -119,7 +122,7 @@ contract Crowdsale is Ownable, SafeMath {
         return safeAdd(tokensToReceiveAtCurrentPrice, additionalTokens);
     }
 
-    // Used while the crowdsale is active to trade ether for tokens
+    /// @dev buy tokens, only usable while crowdsale is active
     function buy() payable onlyDuringSale {
         if (msg.value < MINIMUM_BUY) throw;
         if (safeAdd(etherReceived, msg.value) > ETHER_CAP) throw;
@@ -139,7 +142,7 @@ contract Crowdsale is Ownable, SafeMath {
         throw;
     }
 
-    // close the crowdsale and unlock the tokens
+    /// @dev close the crowdsale and unlock the tokens
     function finalize() onlyOwner {
         if (block.number < startBlock) throw;
         if (crowdsaleClosed) throw;
