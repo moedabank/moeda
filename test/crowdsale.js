@@ -466,18 +466,8 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
 });
 
 async function fastForwardToBlock(instance, blockAttributeName, accounts) {
-    const currentBlock = web3.eth.blockNumber;
-
     // The starting block is dynamic because we run tests in testrpc
     const blockNumber = await instance[blockAttributeName].call();
-    const blocksLeft = blockNumber - currentBlock;
 
-    // Need to fast forward until sale starts
-    if (blocksLeft > 0) {
-        for(let i = 0; i < blocksLeft; i++) {
-            await instance.getLimitAndRate.sendTransaction(
-                0, 0, { from: accounts[1] }
-            );
-        }
-    }
+    await utils.mineUntilBlock(web3, blockNumber);
 }
