@@ -309,7 +309,7 @@ contract('Crowdsale', (accounts) => {
 contract('Crowdsale.buy(), during sale period', (accounts) => {
     before(async () => {
         const instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock', accounts);
+        await fastForwardToBlock(instance, 'startBlock');
     });
 
     it('should throw with limit reached', async () => {
@@ -329,7 +329,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
 contract('Crowdsale.buy(), after sale has ended', (accounts) => {
     before(async () => {
         const instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'endBlock', accounts);
+        await fastForwardToBlock(instance, 'endBlock');
     });
 
     it('should throw', async () => {
@@ -365,7 +365,7 @@ contract('Crowdsale.finalize() during sale period', (accounts) => {
 
     before(async () => {
         instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock', accounts);
+        await fastForwardToBlock(instance, 'startBlock');
     });
     
     it('should set crowd sale to closed and unlock tokens', async () => {
@@ -395,7 +395,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
 
     before(async () => {
         instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock', accounts);
+        await fastForwardToBlock(instance, 'startBlock');
     });
 
     it('should throw if amount is less than minimum', async () => {
@@ -465,7 +465,7 @@ contract('Crowdsale.buy(), during sale period', (accounts) => {
     });
 });
 
-async function fastForwardToBlock(instance, blockAttributeName, accounts) {
+async function fastForwardToBlock(instance, blockAttributeName) {
     // The starting block is dynamic because we run tests in testrpc
     const blockNumber = await instance[blockAttributeName].call();
 
