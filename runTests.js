@@ -23,6 +23,7 @@ server.on('message', (message) => {
                 console.log(err.message);
             } else if (typeof err == "number") {
                 // If a number is returned, exit with that number.
+                server.kill();
                 process.exit(err);
             } else {
                 // Bubble up all other unexpected errors.
