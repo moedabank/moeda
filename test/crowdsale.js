@@ -13,8 +13,12 @@ contract('Crowdsale', (accounts) => {
         });
 
         it('should create a moedaToken instance', async () => {
-            const token = await instance.moedaToken.call();
-            assert.notStrictEqual(token, NULL_ADDRESS);
+            const tokenAddress = await instance.moedaToken.call();
+            const token = MoedaToken.at(tokenAddress);
+            const owner = await token.owner.call();
+
+            assert.strictEqual(owner, instance.address);
+            assert.notStrictEqual(tokenAddress, NULL_ADDRESS);
         });
 
         it('should throw when wallet address is 0');
