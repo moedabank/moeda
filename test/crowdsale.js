@@ -21,9 +21,56 @@ contract('Crowdsale', (accounts) => {
             assert.notStrictEqual(tokenAddress, NULL_ADDRESS);
         });
 
-        it('should throw when wallet address is 0');
-        it('should throw when startBlock is in the past');
-        it('should throw when endBlock is prior or equal to startBlock');
+        it('should not throw when using new', async () => {
+            const currentBlock = web3.eth.blockNumber;
+            const startBlock = currentBlock + 10;
+
+            try {
+                const instance = await Crowdsale.new(
+                    accounts[0], startBlock, startBlock + 30);
+            } catch (error) {
+                fail('should not have thrown')
+            }
+        });
+
+        it('should throw when wallet address is 0', async () => {
+            const currentBlock = web3.eth.blockNumber;
+            const startBlock = currentBlock + 10;
+
+            try {
+                const instance = await Crowdsale.new(
+                    0, startBlock, startBlock + 30);
+                fail('should have thrown');
+            } catch (error) {
+                assertVmException(error);
+            }
+        });
+
+        it('should throw when startBlock is in the past', async () => {
+            const currentBlock = web3.eth.blockNumber;
+
+            try {
+                const instance = await Crowdsale.new(
+                    accounts[0], currentBlock - 1, currentBlock + 10);
+                fail('should have thrown');
+            } catch (error) {
+                assertVmException(error);
+            }
+        });
+
+        it('should throw when endBlock is prior or equal to startBlock',
+        async () => {
+            const currentBlock = web3.eth.blockNumber;
+            const startBlock = currentBlock + 5;
+
+            try {
+                const instance = await Crowdsale.new(
+                    accounts[0], startBlock, startBlock - 1);
+                fail('should have thrown');
+            } catch (error) {
+                assertVmException(error);
+            }
+        });
 
         it('should assign wallet address', async () => {
             const wallet = await instance.wallet.call();
