@@ -4,6 +4,7 @@ const utils = require('./utils');
 const fail = utils.fail;
 const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
+const TEST_WALLET = '0x98a321f414d67f186e30bdac641e5ecf990397ae';
 
 contract('Crowdsale', (accounts) => {
     describe('constructor', () => {
@@ -330,8 +331,8 @@ contract('Crowdsale', (accounts) => {
         });
     });
 
-    describe('buy()', () => {
-        describe('before sale', () => {
+    describe('before sale has started', () => {
+        describe('buy()', () => {
             it('should throw and prevent buying', async () => {
                 const instance = await Crowdsale.deployed();
                 try {
@@ -339,6 +340,164 @@ contract('Crowdsale', (accounts) => {
                     fail('should have thrown')
                 } catch (error) {
                     assertVmException(error);
+                }
+            });
+        });
+
+        describe('finalize()', () => {
+            it('should throw', async () => {
+                const instance = await Crowdsale.deployed();
+
+                try {
+                    await instance.finalize({ from: accounts[0]});
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+        });
+    });
+
+    describe('during sale', () => {
+        let instance;
+        beforeEach(async () => {
+            const currentBlock = web3.eth.blockNumber;
+            const saleDuration = 10;
+            const startBlock = currentBlock + 8;
+            const endBlock = startBlock + saleDuration;
+            instance = await Crowdsale.new(
+                startBlock, endBlock, TEST_WALLET);
+            await fastForwardToBlock(instance, 'startBlock');
+        });
+
+        describe('buy()', () => {
+            it('should throw with limit reached', async () => {
+                const limit = await instance.ETHER_CAP.call();
+                await instance.buy({
+                    value: limit.minus(1),
+                    from: accounts[1] 
+                });
+
+                try {
+                    await instance.buy({ 
+                        value: web3.toWei(1),
+                        from: accounts[1] 
+                    });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+
+            it('should throw if amount is less than minimum', async () => {
+                try {
+                    await instance.buy({ 
+                        from: accounts[2],
+                        value: web3.toWei('0.19')
+                    });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+
+            it('should throw if donation would exceed maximum cap',
+            async () => {
+                try {
+                    await instance.buy({ 
+                        from: accounts[1],
+                        value: web3.toWei(131000)
+                    });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+
+            it('should update total tokens sold amount on success',
+            async () => {
+                const totalTokensBefore = await instance.totalTokensSold.call();
+                await instance.buy({
+                    from: accounts[2],
+                    value: web3.toWei('30')
+                });
+                const totalTokensAfter = await instance.totalTokensSold.call();
+
+                assert.isAbove(
+                    web3.fromWei(totalTokensAfter),
+                    web3.fromWei(totalTokensBefore));
+            });
+
+            it('should update ether recieved amount on success', async () => {
+                const etherBefore = await instance.etherReceived.call();
+                await instance.buy({
+                    from: accounts[2],
+                    value: web3.toWei('30')
+                });
+                const etherAfter = await instance.etherReceived.call();
+
+                assert.strictEqual(
+                    web3.fromWei(etherAfter).toNumber(),
+                    web3.fromWei(etherBefore).toNumber() + 30);
+            });
+
+            it('should throw if token creation fails', async () => {
+                try {
+                    const tokenAddress = await instance.moedaToken();
+                    const token = MoedaToken.at(tokenAddress);
+                    await token.unlock({ from: accounts[0] });
+                    await instance.buy({
+                        from: accounts[2],
+                        value: web3.toWei('30')
+                    });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+        });
+
+        describe('finalize()', () => {
+            it('should set crowd sale to closed and unlock tokens', async () => {
+                await instance.finalize({ from: accounts[0] });
+
+                const crowdsaleClosed = await instance.crowdsaleClosed.call();
+                assert.isTrue(crowdsaleClosed);
+
+                const tokenAddress = await instance.moedaToken.call();
+                const token = MoedaToken.at(tokenAddress);
+                const locked = await token.locked.call();
+                assert.isFalse(locked);
+            });
+
+            it('should throw when already disabled', async () => {
+                try {
+                    await instance.finalize({ from: accounts[0] });
+                    await instance.finalize({ from: accounts[0] });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+                }
+            });
+        });
+    });
+    
+    describe('after sale has ended', () => {
+        describe('buy()', () => {
+            it('should throw', async () => {
+                const instance = await Crowdsale.deployed();
+                const limit = await instance.ETHER_CAP.call();
+
+                try {
+                    await instance.buy({ 
+                        value: web3.toWei(1),
+                        from: accounts[1]
+                    });
+                    fail('should have thrown');
+                } catch (error) {
+                    assertVmException(error);
+
+                    const amount = await instance.etherReceived.call();
+                    assert.strictEqual(amount.toNumber(), 0);
                 }
             });
         });
@@ -355,165 +514,6 @@ contract('Crowdsale', (accounts) => {
             }
         });
     })
-});
-
-contract('Crowdsale.buy(), during sale period', (accounts) => {
-    before(async () => {
-        const instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock');
-    });
-
-    it('should throw with limit reached', async () => {
-        const instance = await Crowdsale.deployed();
-        const limit = await instance.ETHER_CAP.call();
-        await instance.buy({ value: limit.minus(1), from: accounts[1] });
-
-        try {
-            await instance.buy({ value: web3.toWei(1), from: accounts[1] });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
-});
-
-contract('Crowdsale.buy(), after sale has ended', (accounts) => {
-    before(async () => {
-        const instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'endBlock');
-    });
-
-    it('should throw', async () => {
-        const instance = await Crowdsale.deployed();
-        const limit = await instance.ETHER_CAP.call();
-
-        try {
-            await instance.buy({ value: web3.toWei(1), from: accounts[1] });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-
-            const amount = await instance.etherReceived.call();
-            assert.strictEqual(amount.toNumber(), 0);
-        }
-    });
-});
-
-contract('Crowdsale.finalize() before sale period', (accounts) => {
-    it('should throw', async () => {
-        const instance = await Crowdsale.deployed();
-
-        try {
-            await instance.finalize({ from: accounts[0]});
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
-});
-
-contract('Crowdsale.finalize() during sale period', (accounts) => {
-    let instance;        
-
-    before(async () => {
-        instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock');
-    });
-    
-    it('should set crowd sale to closed and unlock tokens', async () => {
-        await instance.finalize({ from: accounts[0] });
-
-        const crowdsaleClosed = await instance.crowdsaleClosed.call();
-        assert.isTrue(crowdsaleClosed);
-
-        const tokenAddress = await instance.moedaToken.call();
-        const token = MoedaToken.at(tokenAddress);
-        const locked = await token.locked.call();
-        assert.isFalse(locked);
-    });
-
-    it('should throw when already disabled', async () => {
-        try {
-            await instance.finalize({ from: accounts[0] });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
-});
-
-contract('Crowdsale.buy(), during sale period', (accounts) => {
-    let instance;        
-
-    before(async () => {
-        instance = await Crowdsale.deployed();
-        await fastForwardToBlock(instance, 'startBlock');
-    });
-
-    it('should throw if amount is less than minimum', async () => {
-        try {
-            await instance.buy({ 
-                from: accounts[2],
-                value: web3.toWei('0.19')
-            });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
-
-    it('should throw if donation would exceed maximum cap',
-    async () => {
-        try {
-            await instance.buy({ 
-                from: accounts[1],
-                value: web3.toWei(131000)
-            });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
-
-    it('should update total tokens sold amount on success', async () => {
-        const totalTokensBefore = await instance.totalTokensSold.call();
-        await instance.buy({
-            from: accounts[2],
-            value: web3.toWei('30')
-        });
-        const totalTokensAfter = await instance.totalTokensSold.call();
-
-        assert.isAbove(
-            web3.fromWei(totalTokensAfter),
-            web3.fromWei(totalTokensBefore));
-    });
-
-    it('should update ether recieved amount on success', async () => {
-        const etherBefore = await instance.etherReceived.call();
-        await instance.buy({
-            from: accounts[2],
-            value: web3.toWei('30')
-        });
-        const etherAfter = await instance.etherReceived.call();
-
-        assert.strictEqual(
-            web3.fromWei(etherAfter).toNumber(),
-            web3.fromWei(etherBefore).toNumber() + 30);
-    });
-
-    it('should throw if token creation fails', async () => {
-        try {
-            const tokenAddress = await instance.moedaToken();
-            const token = MoedaToken.at(tokenAddress);
-            await token.unlock({ from: accounts[0] });
-            await instance.buy({
-                from: accounts[2],
-                value: web3.toWei('30')
-            });
-            fail('should have thrown');
-        } catch (error) {
-            assertVmException(error);
-        }
-    });
 });
 
 async function fastForwardToBlock(instance, blockAttributeName) {

@@ -21,7 +21,7 @@ contract('MoedaToken', (accounts) => {
         });
     });
 
-    describe('create', () => {
+    describe('create()', () => {
         let instance;
 
         before(async () => {
@@ -70,18 +70,54 @@ contract('MoedaToken', (accounts) => {
                 assertVmException(error);
             }
         });
+
+        it('should throw an error when transfers are unlocked', async () => {
+            const instance = await MoedaToken.new();
+            await instance.unlock();
+            const locked = await instance.locked.call();
+            assert.isFalse(locked);
+
+            try {
+                await instance.create(
+                        accounts[1], web3.toWei(500), { from: accounts[0] });
+                fail('should have thrown');
+            } catch (error) {
+                assertVmException(error);
+            }
+        });
     });
 
-    describe('transfers', () => {
+    describe('unlock()', () => {
         let instance;
+        beforeEach(async () => instance = await MoedaToken.new());
 
-        before(async () => {
-            instance = await MoedaToken.deployed();
-            await instance.create(accounts[1], web3.toWei(1500), 
-                { from: accounts[0] });
+        it('should only allow owner to invoke', async () => {
+            try {
+                await instance.unlock({ from: accounts[1] });
+                fail('should have thrown');
+            } catch (error) {
+                assert.include(error.message, 'invalid JUMP');
+            }
+
+            const locked = await instance.locked.call();
+            assert.strictEqual(locked, true);
         });
 
-        it('should throw in transfer if crowdsale is active', async () => {
+        it('should set locked to false', async () => {
+            await instance.unlock({ from: accounts[0] });
+            const locked = await instance.locked.call();
+            assert.strictEqual(locked, false, 'should be unlocked');
+        });
+    });
+
+    describe('transfer()', () => {
+        let instance;
+        beforeEach(async () => {
+            instance = await MoedaToken.new()
+            await instance.create(accounts[1], web3.toWei(1500));
+        });
+
+        it('should throw when transfers are locked', async () => {
             try {
                 const locked = await instance.locked.call();
                 assert.isTrue(locked);
@@ -94,7 +130,31 @@ contract('MoedaToken', (accounts) => {
             }
         });
 
-        it('should throw in transferFrom if crowdsale is active', async () => {
+        it('should not throw when transfers are unlocked', async () => {
+            try {
+                await instance.unlock();
+                const locked = await instance.locked.call();
+                assert.isFalse(locked);
+
+                await instance.transfer(
+                    accounts[2], web3.toWei(15), { from: accounts[1] });
+
+                const balance = await instance.balanceOf.call(accounts[1]);
+                assert.strictEqual(web3.fromWei(balance).toNumber(), 1485);
+            } catch (error) {
+                fail(error.message);
+            }
+        });
+    });
+
+    describe('transferFrom()', () => {
+        let instance;
+        beforeEach(async () => {
+            instance = await MoedaToken.new()
+            await instance.create(accounts[1], web3.toWei(1500));
+        });
+
+        it('should throw when transfers are locked', async () => {
             try {
                 const locked = await instance.locked.call();
                 assert.isTrue(locked);
@@ -114,90 +174,30 @@ contract('MoedaToken', (accounts) => {
                 assertVmException(error);
             }
         });
-    });
-});
 
-contract('Moedatoken, sale is over', (accounts) => {
-    let instance;
-
-    before(async () => {
-        instance = await MoedaToken.deployed();
-        await instance.create(accounts[1], web3.toWei(1500), 
-            { from: accounts[0] });
-        await instance.unlock({ from: accounts[0] });
-    });
-
-    it('create should throw error', async () => {
-            const locked = await instance.locked.call();
-            assert.isFalse(locked);
-
+        it('should not throw when transfers are unlocked', async () => {
             try {
-                await instance.create(
-                        accounts[1], web3.toWei(500), { from: accounts[0] });
-                fail('should have thrown');
+                await instance.unlock();
+                const locked = await instance.locked.call();
+                assert.isFalse(locked);
+
+                await instance.approve(
+                    accounts[2], web3.toWei(100), { from: accounts[1] });
+                const allowance = await instance.allowance.call(
+                    accounts[1], accounts[2]);
+                assert.strictEqual(web3.fromWei(allowance).toNumber(), 100);
+
+                await instance.transferFrom(
+                    accounts[1],
+                    accounts[2],
+                    web3.toWei(50),
+                    { from: accounts[2] });
+
+                const balance = await instance.balanceOf.call(accounts[1]);
+                assert.strictEqual(web3.fromWei(balance).toNumber(), 1450);
             } catch (error) {
-                assertVmException(error);
+                fail(error.message);
             }
         });
-
-    it('transfer should not throw once crowdsale is over', async () => {        
-        try {
-            const locked = await instance.locked.call();
-            assert.isFalse(locked);
-
-            await instance.transfer(
-                accounts[2], web3.toWei(15), { from: accounts[1] });
-
-            const balance = await instance.balanceOf.call(accounts[1]);
-            assert.strictEqual(web3.fromWei(balance).toNumber(), 1485);
-        } catch (error) {
-            fail(error.message);
-        }
-    });
-
-    it('transferFrom should not throw once crowdsale is over', async () => {
-        try {
-            const locked = await instance.locked.call();
-            assert.isFalse(locked);
-
-            await instance.approve(
-                accounts[2], web3.toWei(100), { from: accounts[1] });
-            const allowance = await instance.allowance.call(
-                accounts[1], accounts[2]);
-            assert.strictEqual(web3.fromWei(allowance).toNumber(), 100);
-
-            await instance.transferFrom(
-                accounts[1], accounts[2], web3.toWei(50), { from: accounts[2] });
-
-            const balance = await instance.balanceOf.call(accounts[1]);
-            assert.strictEqual(web3.fromWei(balance).toNumber(), 1435);
-        } catch (error) {
-            fail(error.message);
-        }
-    });
-});
-
-contract('Moedatoken unlock', (accounts) => {
-    it('should set locked to false', async () => {
-        const instance = await MoedaToken.deployed();
-        await instance.unlock({ from: accounts[0] });
-        const locked = await instance.locked.call();
-        assert.strictEqual(locked, false, 'should be unlocked');
-    });
-});
-
-contract('Moedatoken unlock', (accounts) => {
-    it('should only allow owner to invoke', async () => {
-        const instance = await MoedaToken.deployed();
-
-        try {
-            await instance.unlock({ from: accounts[1] });
-            fail('should have thrown');
-        } catch (error) {
-            assert.include(error.message, 'invalid JUMP');
-        }
-
-        const locked = await instance.locked.call();
-        assert.strictEqual(locked, true);
     });
 });
