@@ -275,11 +275,25 @@ contract('Crowdsale', (accounts) => {
     });
 
     describe('before sale has started', () => {
-        describe('buy()', () => {
+        let instance;
+
+        beforeEach(async () => {
+            const blockNumber = web3.eth.blockNumber;
+            instance = await Crowdsale.new(
+                TEST_WALLET, blockNumber + 5, blockNumber + 10);
+            const startBlock = await instance.startBlock.call();
+            assert.isBelow(
+                blockNumber,
+                startBlock.toNumber(),
+                'sale should not have been started');
+        });
+
+        describe('when we receive ether', () => {
             it('should throw and prevent buying', async () => {
-                const instance = await Crowdsale.deployed();
                 try {
-                    const value = await instance.buy.call();
+                    const value = await instance.sendTransaction({
+                        value: web3.toWei(5), from: accounts[0]
+                    });
                     fail('should have thrown')
                 } catch (error) {
                     assertVmException(error);
@@ -289,8 +303,6 @@ contract('Crowdsale', (accounts) => {
 
         describe('finalize()', () => {
             it('should throw', async () => {
-                const instance = await Crowdsale.deployed();
-
                 try {
                     await instance.finalize({ from: accounts[0]});
                 } catch (error) {
@@ -302,26 +314,35 @@ contract('Crowdsale', (accounts) => {
 
     describe('during sale', () => {
         let instance;
+
         beforeEach(async () => {
-            const currentBlock = web3.eth.blockNumber;
+            let currentBlock = web3.eth.blockNumber;
             const saleDuration = 10;
             const startBlock = currentBlock + 8;
             const endBlock = startBlock + saleDuration;
+            
             instance = await Crowdsale.new(
                 TEST_WALLET, startBlock, endBlock);
             await fastForwardToBlock(instance, 'startBlock');
+            
+            currentBlock = web3.eth.blockNumber; 
+            assert.isAtLeast(
+                currentBlock, startBlock, 'sale should have been started');
+            assert.isBelow(
+                currentBlock, endBlock, 'sale should not have ended yet');
         });
 
-        describe('buy()', () => {
-            it('should throw with limit reached', async () => {
+        describe('when we receive ether', () => {
+            it('should throw when limit has already been reached',
+            async () => {
                 const limit = await instance.TIER3_CAP.call();
-                await instance.buy({
+                await instance.sendTransaction({
                     value: limit.minus(1),
-                    from: accounts[1] 
+                    from: accounts[1]
                 });
 
                 try {
-                    await instance.buy({ 
+                    await instance.sendTransaction({ 
                         value: web3.toWei(1),
                         from: accounts[1] 
                     });
@@ -333,7 +354,7 @@ contract('Crowdsale', (accounts) => {
 
             it('should throw if amount is less than minimum', async () => {
                 try {
-                    await instance.buy({ 
+                    await instance.sendTransaction({ 
                         from: accounts[2],
                         value: web3.toWei('0.19')
                     });
@@ -346,7 +367,7 @@ contract('Crowdsale', (accounts) => {
             it('should throw if donation would exceed maximum cap',
             async () => {
                 try {
-                    await instance.buy({ 
+                    await instance.sendTransaction({ 
                         from: accounts[1],
                         value: web3.toWei(131000)
                     });
@@ -359,7 +380,7 @@ contract('Crowdsale', (accounts) => {
             it('should update total tokens sold amount on success',
             async () => {
                 const totalTokensBefore = await instance.totalTokensSold.call();
-                await instance.buy({
+                await instance.sendTransaction({
                     from: accounts[2],
                     value: web3.toWei('30')
                 });
@@ -372,7 +393,7 @@ contract('Crowdsale', (accounts) => {
 
             it('should update ether recieved amount on success', async () => {
                 const etherBefore = await instance.etherReceived.call();
-                await instance.buy({
+                await instance.sendTransaction({
                     from: accounts[2],
                     value: web3.toWei('30')
                 });
@@ -388,7 +409,7 @@ contract('Crowdsale', (accounts) => {
                     const tokenAddress = await instance.moedaToken();
                     const token = MoedaToken.at(tokenAddress);
                     await token.unlock({ from: accounts[0] });
-                    await instance.buy({
+                    await instance.sendTransaction({
                         from: accounts[2],
                         value: web3.toWei('30')
                     });
@@ -426,9 +447,9 @@ contract('Crowdsale', (accounts) => {
                 // make some buys to reach cap, to test that we can create
                 // presale tokens even when cap is reached and that the total
                 // matches what is expected
-                await instance.buy({ from: accounts[1], value: web3.toWei(75000) });
-                await instance.buy({ from: accounts[2], value: web3.toWei(35000) });
-                await instance.buy({ from: accounts[3], value: web3.toWei(20000) });
+                await instance.sendTransaction({ from: accounts[1], value: web3.toWei(75000) });
+                await instance.sendTransaction({ from: accounts[2], value: web3.toWei(35000) });
+                await instance.sendTransaction({ from: accounts[3], value: web3.toWei(20000) });
 
                 await instance.finalize({ from: accounts[0] });
 
@@ -451,13 +472,16 @@ contract('Crowdsale', (accounts) => {
     });
     
     describe('after sale has ended', () => {
-        describe('buy()', () => {
+        describe('when we receive ether', () => {
             it('should throw', async () => {
                 const instance = await Crowdsale.deployed();
+                const endBlock = await instance.endBlock.call();
+                assert.isAtLeast(
+                    web3.eth.blockNumber, endBlock, 'sale should have ended');
                 const limit = await instance.TIER3_CAP.call();
 
                 try {
-                    await instance.buy({ 
+                    await instance.sendTransaction({ 
                         value: web3.toWei(1),
                         from: accounts[1]
                     });
@@ -471,18 +495,6 @@ contract('Crowdsale', (accounts) => {
             });
         });
     });
-
-    describe('default method', () => {
-        it('should throw', async () => {
-            const instance = await Crowdsale.deployed();
-            try {
-                await instance.sendTransaction({ from: accounts[0] });
-                fail('should have thrown');
-            } catch (error) {
-                assertVmException(error);
-            }
-        });
-    })
 });
 
 async function fastForwardToBlock(instance, blockAttributeName) {

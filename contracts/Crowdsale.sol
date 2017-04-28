@@ -123,7 +123,7 @@ contract Crowdsale is Ownable, SafeMath {
     }
 
     /// @dev buy tokens, only usable while crowdsale is active
-    function buy() payable onlyDuringSale {
+    function processBuy() internal returns (bool) {
         if (msg.value < MINIMUM_BUY) throw;
         if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
         if (!wallet.send(msg.value)) throw;
@@ -133,13 +133,14 @@ contract Crowdsale is Ownable, SafeMath {
         if (!moedaToken.create(msg.sender, tokenAmount)) throw;
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
-
         Buy(msg.sender, msg.value, tokenAmount);
+
+        return true;
     }
 
-    // always throw, this will prevent sending ether from an exchange
-    function () {
-        throw;
+    // grant tokens to buyer when we receive ether
+    function () payable onlyDuringSale {
+        if (!processBuy()) throw;
     }
 
     /// @dev close the crowdsale and unlock the tokens
