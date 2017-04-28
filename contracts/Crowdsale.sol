@@ -19,7 +19,7 @@ contract Crowdsale is Ownable, SafeMath {
     address public presaleWallet;
 
     // number of tokens sold during presale
-    uint256 public PRESALE_TOKEN_AMOUNT = 5000000 ether;
+    uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 ether;
     
     // smallest possible donation
     uint256 public constant MINIMUM_BUY = 200 finney;
