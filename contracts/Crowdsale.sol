@@ -6,29 +6,33 @@ pragma solidity ^0.4.8;
 
 /// @title Moeda crowdsale
 contract Crowdsale is Ownable, SafeMath {
-    bool public crowdsaleClosed;  // whether the crowdsale has been closed manually
-    address public wallet; // recipient of all crowdsale funds
-    MoedaToken public moedaToken; // token that will be sold during sale
+    bool public crowdsaleClosed;        // whether the crowdsale has been closed 
+                                        // manually
+    address public wallet;              // recipient of all crowdsale funds
+    MoedaToken public moedaToken;       // token that will be sold during sale
     uint256 public etherReceived;       // total ether received
     uint256 public totalTokensSold;     // number of tokens sold
     uint256 public startBlock;          // block where sale starts
     uint256 public endBlock;            // block where sale ends
-    mapping (address => uint256) public donors;
+
+    // wallet address that will receive tokens sold during presale
+    address public presaleWallet;
+
+    // number of tokens sold during presale
+    uint256 public PRESALE_TOKEN_AMOUNT = 5000000 ether;
     
     // smallest possible donation
     uint256 public constant MINIMUM_BUY = 200 finney;
 
     // token creation rates
-    uint256 public constant TIER0_RATE = 2 finney;
     uint256 public constant TIER1_RATE = 6 finney;
     uint256 public constant TIER2_RATE = 8 finney;
-    uint256 public constant TIER3_RATE = 10 finney;
+    uint256 public constant TIER3_RATE = 12 finney;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER0_CAP =  10000 ether;
-    uint256 public constant TIER1_CAP =  40000 ether;
-    uint256 public constant TIER2_CAP =  80000 ether;
-    uint256 public constant ETHER_CAP = 130000 ether; // Total ether cap
+    uint256 public constant TIER1_CAP =  30000 ether;
+    uint256 public constant TIER2_CAP =  70000 ether;
+    uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
 
     event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
 
@@ -72,11 +76,7 @@ contract Crowdsale is Ownable, SafeMath {
         uint256 limit = 0;
         uint256 rate = 0;
 
-        if (totalReceived < TIER0_CAP) {
-            limit = TIER0_CAP;
-            rate = TIER0_RATE;
-        }
-        else if (totalReceived < TIER1_CAP) {
+        if (totalReceived < TIER1_CAP) {
             limit = TIER1_CAP;
             rate = TIER1_RATE;
         }
@@ -84,8 +84,8 @@ contract Crowdsale is Ownable, SafeMath {
             limit = TIER2_CAP;
             rate = TIER2_RATE;
         }
-        else if (totalReceived < ETHER_CAP) {
-            limit = ETHER_CAP;
+        else if (totalReceived < TIER3_CAP) {
+            limit = TIER3_CAP;
             rate = TIER3_RATE;
         } else {
             throw; // this shouldn't happen
@@ -125,7 +125,7 @@ contract Crowdsale is Ownable, SafeMath {
     /// @dev buy tokens, only usable while crowdsale is active
     function buy() payable onlyDuringSale {
         if (msg.value < MINIMUM_BUY) throw;
-        if (safeAdd(etherReceived, msg.value) > ETHER_CAP) throw;
+        if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
         if (!wallet.send(msg.value)) throw;
 
         uint256 tokenAmount = getTokenAmount(etherReceived, msg.value);
@@ -146,6 +146,11 @@ contract Crowdsale is Ownable, SafeMath {
     function finalize() onlyOwner {
         if (block.number < startBlock) throw;
         if (crowdsaleClosed) throw;
+
+        // create and assign presale tokens to team wallet
+        if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
+
+        // unlock tokens for spending
         if(!moedaToken.unlock()) throw;
         crowdsaleClosed = true;
     }

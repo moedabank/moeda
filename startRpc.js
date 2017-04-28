@@ -15,7 +15,15 @@ const options = {
         {
             secretKey: '0x0b51db8774a16e138d18ac73e0bd8551cd9b807ac9b88c4b8ddbbd3fc173be53',
             balance: megaBalance
-        }
+        },
+        {
+            secretKey: '0xfc689157bedd55b843c63e2d1d8d725be99a8daaa434f5863405ad70489075cb',
+            balance: megaBalance
+        },
+        {
+            secretKey: '0xf286a77b93cef502684d2a2c9cbc1d242ec50b06cf5b2d9f152100a4969abe47',
+            balance: megaBalance
+        },
     ]
 };
 const server = testrpc.server(options);
