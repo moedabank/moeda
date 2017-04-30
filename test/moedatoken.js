@@ -219,6 +219,14 @@ contract('MoedaToken', (accounts) => {
         async () => {
             const instance = await MoedaToken.new();
             await instance.create(accounts[1], web3.toWei(15));
+            const amount = web3.toWei(4);
+            await instance.approve(
+                accounts[2], amount, { from: accounts[1] });
+
+            const allowance = await instance.allowance.call(
+                accounts[1], accounts[2]);
+            assert.strictEqual(
+                allowance.toString(), amount.toString());
         });
 
         it('should throw if sender has no balance', async () => {
