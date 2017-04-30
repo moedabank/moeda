@@ -14,7 +14,7 @@ import './SafeMath.sol';
  */
 contract StandardToken is ERC20, SafeMath {
 
-  mapping(address => uint) balances;
+  mapping (address => uint) balances;
   mapping (address => mapping (address => uint)) allowed;
 
   function transfer(address _to, uint _value) returns (bool success) {
@@ -42,6 +42,7 @@ contract StandardToken is ERC20, SafeMath {
   }
 
   function approve(address _spender, uint _value) returns (bool success) {
+    if (balances[msg.sender] < _value) throw;
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
     return true;
