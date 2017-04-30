@@ -4,10 +4,12 @@ const fail = utils.fail;
 const assertVmException = utils.assertVmException;
 
 contract('MoedaToken', (accounts) => {
-    describe('constructor', () => {
-        let instance;
-        before(async () => instance = await MoedaToken.deployed());
+    let instance;
+    beforeEach(async () => {
+        instance = await MoedaToken.new();
+    });
 
+    describe('constructor', () => {
         it('should set locked to true', async () => {
             const locked = await instance.locked.call();
             assert.strictEqual(
@@ -22,12 +24,6 @@ contract('MoedaToken', (accounts) => {
     });
 
     describe('create()', () => {
-        let instance;
-
-        before(async () => {
-            instance = await MoedaToken.deployed();
-        });
-
         it('should throw if newly generated tokens would exceed max supply',
         async () => {
             const maxTokens = await instance.MAX_TOKENS.call();
@@ -88,9 +84,6 @@ contract('MoedaToken', (accounts) => {
     });
 
     describe('unlock()', () => {
-        let instance;
-        beforeEach(async () => instance = await MoedaToken.new());
-
         it('should only allow owner to invoke', async () => {
             try {
                 await instance.unlock({ from: accounts[1] });
@@ -111,9 +104,7 @@ contract('MoedaToken', (accounts) => {
     });
 
     describe('transfer()', () => {
-        let instance;
         beforeEach(async () => {
-            instance = await MoedaToken.new()
             await instance.create(accounts[1], web3.toWei(1500));
         });
 
@@ -136,11 +127,17 @@ contract('MoedaToken', (accounts) => {
                 const locked = await instance.locked.call();
                 assert.isFalse(locked);
 
+                const amount = web3.toWei(15);
                 await instance.transfer(
-                    accounts[2], web3.toWei(15), { from: accounts[1] });
+                    accounts[2], amount, { from: accounts[1] });
 
                 const balance = await instance.balanceOf.call(accounts[1]);
                 assert.strictEqual(web3.fromWei(balance).toNumber(), 1485);
+
+                const recipientBalance = await instance.balanceOf.call(accounts[2]);
+                assert.strictEqual(
+                    recipientBalance.toString(),
+                    amount.toString());
             } catch (error) {
                 fail(error.message);
             }
@@ -148,9 +145,7 @@ contract('MoedaToken', (accounts) => {
     });
 
     describe('transferFrom()', () => {
-        let instance;
         beforeEach(async () => {
-            instance = await MoedaToken.new()
             await instance.create(accounts[1], web3.toWei(1500));
         });
 
@@ -195,9 +190,74 @@ contract('MoedaToken', (accounts) => {
 
                 const balance = await instance.balanceOf.call(accounts[1]);
                 assert.strictEqual(web3.fromWei(balance).toNumber(), 1450);
+
+                const recipientBalance = await instance.balanceOf.call(accounts[2]);
+                assert.strictEqual(
+                    recipientBalance.toString(),
+                    web3.toWei(50).toString());
             } catch (error) {
                 fail(error.message);
             }
+        });
+    });
+
+    describe('balanceOf()', () => {
+        it('should return balance of token holder', async () => {
+            await instance.create(accounts[1], web3.toWei(15));
+            const balance = await instance.balanceOf.call(accounts[1]);
+            assert.strictEqual(balance.toString(), web3.toWei(15).toString());
+        });
+
+        it('should return zero when sender has no balance', async () => {
+            const balance = await instance.balanceOf.call(accounts[3]);
+            assert.strictEqual(balance.toNumber(), 0);
+        });
+    });
+
+    describe('approve()', () => {
+        it('should set a given allowance for a requested spender',
+        async () => {
+            const instance = await MoedaToken.new();
+            await instance.create(accounts[1], web3.toWei(15));
+        });
+
+        it('should throw if sender has no balance', async () => {
+            try {
+                await instance.approve(accounts[1], accounts[2], 5);
+                fail('should have thrown');
+            } catch (error) {
+                assertVmException(error);
+            }
+        });
+
+        it('should emit an approval event', async () => {
+            await instance.create(accounts[1], web3.toWei(15));
+            const amount = web3.toWei(9);
+            await instance.approve(
+                accounts[3], amount, { from: accounts[1] });
+            const event = await utils.getLatestEvent(instance, 'Approval');
+            assert.strictEqual(event.owner, accounts[1]);
+            assert.strictEqual(event.spender, accounts[3]);
+            assert.strictEqual(event.value.toString(), amount.toString());
+        });
+    });
+
+    describe('allowance()', () => {
+        it('should return an allowed transfer amount', async () => {
+            await instance.create(accounts[1], web3.toWei(15));
+            await instance.approve(
+                accounts[2], web3.toWei(8), { from: accounts[1] });
+            const allowance = await instance.allowance.call(
+                accounts[1], accounts[2]);
+            assert.strictEqual(
+                web3.fromWei(allowance).toNumber(), 8);
+        });
+
+        it('should return zero if no allowance exists', async () => {
+            const allowance = await instance.allowance.call(
+                accounts[1], accounts[2]);
+            assert.strictEqual(
+                web3.fromWei(allowance).toNumber(), 0);
         });
     });
 });

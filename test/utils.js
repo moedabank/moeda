@@ -21,6 +21,14 @@ module.exports = {
             await mineBlock(web3);
         }
     },
+    async getLatestEvent(instance, eventName) {
+        const watcher = instance[eventName]();
+        const events = await new Promise(
+            (resolve, reject) => watcher.get(
+                (err, res) => err ? reject(err) : resolve(res)));
+
+        return events[events.length - 1].args;
+    },
     mineBlock,
 };
 
