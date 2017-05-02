@@ -5,7 +5,7 @@ pragma solidity ^0.4.8;
 
 /// @title Moeda Loaylty Points token contract
 contract MoedaToken is StandardToken, Ownable {
-    string public constant name = "Moeda Loalty Points";
+    string public constant name = "Moeda Loyalty Points";
     string public constant symbol = "MLO";
     uint8 public constant decimals = 18;
 
