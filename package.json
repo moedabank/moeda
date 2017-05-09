@@ -20,9 +20,9 @@
   },
   "homepage": "https://github.com/erkmos/moeda#readme",
   "devDependencies": {
-    "chai": "^3.5.0",
-    "ethereumjs-testrpc": "^3.0.4",
-    "truffle": "^3.2.1",
-    "web3": "^0.18.4"
+    "chai": "3.5.0",
+    "ethereumjs-testrpc": "3.0.4",
+    "truffle": "3.2.1",
+    "web3": "0.18.4"
   }
 }
