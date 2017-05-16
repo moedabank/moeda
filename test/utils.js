@@ -25,7 +25,13 @@ module.exports = {
         const watcher = instance[eventName]();
         const events = await new Promise(
             (resolve, reject) => watcher.get(
-                (err, res) => err ? reject(err) : resolve(res)));
+                (error, result) => {
+                    watcher.stopWatching();
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(result);
+                }));
 
         return events[events.length - 1].args;
     },

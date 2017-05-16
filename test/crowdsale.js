@@ -352,7 +352,7 @@ contract('Crowdsale', (accounts) => {
                 }
             });
 
-            it('should throw if amount is less than minimum', async () => {
+            it('should throw if amount is less than DUST_LIMIT', async () => {
                 try {
                     await instance.sendTransaction({ 
                         from: accounts[2],
@@ -421,65 +421,128 @@ contract('Crowdsale', (accounts) => {
         });
 
         describe('finalize()', () => {
-            it('should set crowd sale to closed and unlock tokens', async () => {
-                await instance.finalize({ from: accounts[0] });
+            describe('when cap has not been reached', () => {
+                it('should throw and not credit presale, not unlock tokens',
+                async () => {
+                    try {
+                        await instance.finalize({ from: accounts[0] });
 
-                const crowdsaleClosed = await instance.crowdsaleClosed.call();
-                assert.isTrue(crowdsaleClosed);
+                        const teamAddress = await instance.wallet.call();
+                        const tokenAddress = await instance.moedaToken.call();
+                        const token = MoedaToken.at(tokenAddress);
+                        const locked = await token.locked.call();
+                        const teamBalance = await token.balanceOf.call(
+                            teamAddress);
 
-                const tokenAddress = await instance.moedaToken.call();
-                const token = MoedaToken.at(tokenAddress);
-                const locked = await token.locked.call();
-                assert.isFalse(locked);
+                        assert.isFalse(locked);
+                        assert.strictEqual(teamBalance.toString(10), '0');
+                    } catch (error) {
+                        assertVmException(error);
+                    }
+                });
             });
 
-            it('should throw when already disabled', async () => {
-                try {
+            describe('when less than DUST_LIMIT remains until crowdsale cap',
+            () => {
+                beforeEach(async () => {
+                    // If remaining amount is less than dust limit we can 
+                    // complete the sale
+                    const cap = await instance.TIER3_CAP.call();
+                    const dust_limit = await instance.DUST_LIMIT.call();
+                    await instance.sendTransaction({
+                        from: accounts[1], value: cap.sub(dust_limit.sub(1)) });
+                });
+
+                it('should set crowd sale to closed and unlock tokens if cap reached',
+                async () => {
                     await instance.finalize({ from: accounts[0] });
+
+                    const crowdsaleClosed = await instance.crowdsaleClosed.call();
+                    assert.isTrue(crowdsaleClosed);
+
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const locked = await token.locked.call();
+                    assert.isFalse(locked);
+                });
+
+                it('should throw when already disabled', async () => {
+                    try {
+                        // make sure cap has been reached
+                        const cap = await instance.TIER3_CAP.call();
+                        await instance.sendTransaction({
+                            from: accounts[1], value: cap });
+
+                        await instance.finalize({ from: accounts[0] });
+                        await instance.finalize({ from: accounts[0] });
+                        fail('should have thrown');
+                    } catch (error) {
+                        assertVmException(error);
+                    }
+                });
+
+                it('should assign presale tokens to team wallet', async () => {
                     await instance.finalize({ from: accounts[0] });
-                    fail('should have thrown');
-                } catch (error) {
-                    assertVmException(error);
-                }
-            });
 
-            it('should assign presale tokens to team wallet', async () => {
-                // make some buys to reach cap, to test that we can create
-                // presale tokens even when cap is reached and that the total
-                // matches what is expected
-                await instance.sendTransaction({ from: accounts[1], value: web3.toWei(75000) });
-                await instance.sendTransaction({ from: accounts[2], value: web3.toWei(35000) });
-                await instance.sendTransaction({ from: accounts[3], value: web3.toWei(20000) });
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
+                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
 
-                await instance.finalize({ from: accounts[0] });
+                    assert.strictEqual(
+                        teamWalletBalance.toString(10), web3.toWei(5000000));
 
-                const tokenAddress = await instance.moedaToken.call();
-                const token = MoedaToken.at(tokenAddress);
-                const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
-                const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+                    const TOKEN_MAX = await token.MAX_TOKENS.call();
+                    const totalSupply = await token.totalSupply.call();
 
-                assert.strictEqual(
-                    teamWalletBalance.toString(10), web3.toWei(5000000));
-
-                const TOKEN_MAX = await token.MAX_TOKENS.call();
-                const totalSupply = await token.totalSupply.call();
-
-                // 2 wei rounding error due to precision problems
-                assert.isAtMost(
-                    totalSupply.toString(10), TOKEN_MAX.toString(10));
+                    // 2 wei rounding error due to precision problems
+                    assert.isAtMost(
+                        totalSupply.toString(10), TOKEN_MAX.toString(10));
+                });
             });
         });
     });
     
     describe('after sale has ended', () => {
+        let instance;
+        beforeEach(async () => {
+            let currentBlock = web3.eth.blockNumber;
+            const saleDuration = 10;
+            const startBlock = currentBlock + 8;
+            const endBlock = startBlock + saleDuration;
+
+            instance = await Crowdsale.new(
+                TEST_WALLET, startBlock, endBlock);
+            await fastForwardToBlock(instance, 'endBlock');
+
+            currentBlock = web3.eth.blockNumber;
+            assert.isAtLeast(
+                currentBlock, endBlock, 'sale should have ended');
+        });
+
+        describe('finalize()', () => {
+            it('should not throw, credit presale tokens and unlock tokens',
+            async () => {
+                try {
+                    await instance.finalize(({ from: accounts[0] }));
+                    const closed = await instance.crowdsaleClosed.call();
+                    assert.isTrue(closed);
+
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
+                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+
+                    assert.strictEqual(
+                        teamWalletBalance.toString(10), web3.toWei(5000000));
+                } catch (error) {
+                    fail(`should not have thrown ${error}`);
+                }
+            });
+        });
+
         describe('when we receive ether', () => {
             it('should throw', async () => {
-                const instance = await Crowdsale.deployed();
-                const endBlock = await instance.endBlock.call();
-                assert.isAtLeast(
-                    web3.eth.blockNumber, endBlock, 'sale should have ended');
-                const limit = await instance.TIER3_CAP.call();
-
                 try {
                     await instance.sendTransaction({ 
                         value: web3.toWei(1),

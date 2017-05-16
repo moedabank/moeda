@@ -22,7 +22,7 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 ether;
     
     // smallest possible donation
-    uint256 public constant MINIMUM_BUY = 200 finney;
+    uint256 public constant DUST_LIMIT = 200 finney;
 
     // token creation rates
     uint256 public constant TIER1_RATE = 6 finney;
@@ -124,7 +124,7 @@ contract Crowdsale is Ownable, SafeMath {
 
     /// @dev buy tokens, only usable while crowdsale is active
     function processBuy() internal returns (bool) {
-        if (msg.value < MINIMUM_BUY) throw;
+        if (msg.value < DUST_LIMIT) throw;
         if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
         if (!wallet.send(msg.value)) throw;
 
@@ -143,10 +143,17 @@ contract Crowdsale is Ownable, SafeMath {
         if (!processBuy()) throw;
     }
 
-    /// @dev close the crowdsale and unlock the tokens
+    /// @dev close the crowdsale manually and unlock the tokens
+    /// this will only be successful if not already executed,
+    /// if endBlock has been reached, or if the cap has been reached
     function finalize() onlyOwner {
         if (block.number < startBlock) throw;
         if (crowdsaleClosed) throw;
+
+        // if amount remaining is less than dust limit, allow sale to be
+        // completed early
+        uint256 minCapRequirement = safeAdd(etherReceived, DUST_LIMIT);
+        if (block.number < endBlock && minCapRequirement < TIER3_CAP) throw;
 
         // create and assign presale tokens to team wallet
         if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
