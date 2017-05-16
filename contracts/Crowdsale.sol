@@ -15,9 +15,6 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public startBlock;          // block where sale starts
     uint256 public endBlock;            // block where sale ends
 
-    // wallet address that will receive tokens sold during presale
-    address public presaleWallet;
-
     // used to scale token amounts to 18 decimals
     uint256 public constant TOKEN_MULTIPLIER = 10 ** 18;
 
