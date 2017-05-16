@@ -525,7 +525,7 @@ contract('Crowdsale', (accounts) => {
 
                     const tokenAddress = await instance.moedaToken.call();
                     const token = MoedaToken.at(tokenAddress);
-                    const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
+                    const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
                     const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
 
                     assert.strictEqual(
@@ -569,7 +569,7 @@ contract('Crowdsale', (accounts) => {
 
                     const tokenAddress = await instance.moedaToken.call();
                     const token = MoedaToken.at(tokenAddress);
-                    const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
+                    const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
                     const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
 
                     assert.strictEqual(

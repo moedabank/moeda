@@ -18,8 +18,8 @@ contract Crowdsale is Ownable, SafeMath {
     // used to scale token amounts to 18 decimals
     uint256 public constant TOKEN_MULTIPLIER = 10 ** 18;
 
-    // number of tokens sold during presale
-    uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 * TOKEN_MULTIPLIER;
+    // number of tokens allocated to presale (prior to crowdsale)
+    uint256 public constant PRESALE_TOKEN_ALLOCATION = 5000000 * TOKEN_MULTIPLIER;
     
     // smallest possible donation
     uint256 public constant DUST_LIMIT = 200 finney;
@@ -159,7 +159,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (block.number < endBlock && amountRemaining >= DUST_LIMIT) throw;
 
         // create and assign presale tokens to team wallet
-        moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT);
+        moedaToken.create(wallet, PRESALE_TOKEN_ALLOCATION);
 
         // unlock tokens for spending
         moedaToken.unlock();
