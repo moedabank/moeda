@@ -2,7 +2,7 @@ import './SafeMath.sol';
 import './Ownable.sol';
 import './MoedaToken.sol';
 
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 /// @title Moeda crowdsale
 contract Crowdsale is Ownable, SafeMath {

@@ -107,7 +107,7 @@ contract('MoedaToken', (accounts) => {
                 await instance.unlock({ from: accounts[1] });
                 fail('should have thrown');
             } catch (error) {
-                assert.include(error.message, 'invalid JUMP');
+                assertVmException(error);
             }
 
             const saleActive = await instance.saleActive.call();

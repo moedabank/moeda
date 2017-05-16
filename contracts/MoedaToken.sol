@@ -1,7 +1,7 @@
 import './StandardToken.sol';
 import './Ownable.sol';
 
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 /// @title Moeda Loaylty Points token contract
 contract MoedaToken is StandardToken, Ownable {

@@ -7,7 +7,7 @@ module.exports = {
         throw new Error(message);
     },
     assertVmException(error) {
-        assert.include(error.message, 'invalid JUMP');
+        assert.include(error.message, 'invalid opcode');
     },
     async mineUntilBlock(web3, blockNumber) {
         const currentBlock = web3.eth.blockNumber;
