@@ -6,6 +6,7 @@ import './SafeMath.sol';
 
 
 /**
+ * Copyright (c) 2016 Smart Contract Solutions, Inc.
  * Standard ERC20 token
  *
  * https://github.com/ethereum/EIPs/issues/20
