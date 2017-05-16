@@ -122,8 +122,9 @@ contract Crowdsale is Ownable, SafeMath {
         return safeAdd(tokensToReceiveAtCurrentPrice, additionalTokens);
     }
 
+    /// grant tokens to buyer when we receive ether
     /// @dev buy tokens, only usable while crowdsale is active
-    function processBuy() internal returns (bool) {
+    function () payable onlyDuringSale {
         if (msg.value < DUST_LIMIT) throw;
         if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
         if (!wallet.send(msg.value)) throw;
@@ -134,13 +135,6 @@ contract Crowdsale is Ownable, SafeMath {
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
         Buy(msg.sender, msg.value, tokenAmount);
-
-        return true;
-    }
-
-    // grant tokens to buyer when we receive ether
-    function () payable onlyDuringSale {
-        if (!processBuy()) throw;
     }
 
     /// @dev close the crowdsale manually and unlock the tokens
