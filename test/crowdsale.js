@@ -1,12 +1,19 @@
 const Crowdsale = artifacts.require('./Crowdsale');
 const MoedaToken = artifacts.require('./MoedaToken');
+const Wallet = artifacts.require('./Wallet');
 const utils = require('./utils');
 const fail = utils.fail;
 const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
-const TEST_WALLET = '0x98a321f414d67f186e30bdac641e5ecf990397ae';
 
 contract('Crowdsale', (accounts) => {
+    let TEST_WALLET;
+    before(async () => {
+        const instance = await Wallet.new(
+            [accounts[0]], 1, web3.toWei(1000000000));
+        TEST_WALLET = instance.address;
+    });
+
     describe('constructor', () => {
         let instance;        
         before(async () => {
@@ -389,6 +396,23 @@ contract('Crowdsale', (accounts) => {
                 assert.isAbove(
                     web3.fromWei(totalTokensAfter),
                     web3.fromWei(totalTokensBefore));
+            });
+
+            it('should send received ether to multisig wallet', async () => {
+                const etherBefore = await web3.eth.getBalance(TEST_WALLET);
+                const wallet = await instance.wallet.call();
+                const amount = web3.toWei(300);
+
+                await instance.sendTransaction({
+                    from: accounts[2],
+                    value: amount
+                });
+                const etherAfter = await web3.eth.getBalance(TEST_WALLET);
+
+                assert.strictEqual(wallet, TEST_WALLET);
+                assert.strictEqual(
+                    etherAfter.toString(10),
+                    etherBefore.plus(amount).toString(10));
             });
 
             it('should update ether recieved amount on success', async () => {
