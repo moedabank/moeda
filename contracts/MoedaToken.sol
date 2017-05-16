@@ -40,9 +40,8 @@ contract MoedaToken is StandardToken, Ownable {
 
     /// @dev unlock transfers
     /// @return true if successful
-    function unlock() onlyOwner returns (bool) {
+    function unlock() onlyOwner {
         saleActive = false;
-        return true;
     }
 
     /// @dev create tokens, only usable while saleActive

@@ -153,7 +153,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
 
         // unlock tokens for spending
-        if(!moedaToken.unlock()) throw;
+        moedaToken.unlock();
         crowdsaleClosed = true;
     }
 }
