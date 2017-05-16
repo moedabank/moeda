@@ -51,7 +51,7 @@ contract MoedaToken is StandardToken, Ownable {
     function create(address recipient, uint256 amount) onlyOwner onlyDuringSale
     returns(bool) {
         if (amount == 0) throw;
-        if (totalSupply + amount > MAX_TOKENS) throw;
+        if (safeAdd(totalSupply, amount) > MAX_TOKENS) throw;
 
         balances[recipient] = safeAdd(balances[recipient], amount);
         totalSupply = safeAdd(totalSupply, amount);
