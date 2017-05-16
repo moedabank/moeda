@@ -430,11 +430,11 @@ contract('Crowdsale', (accounts) => {
                         const teamAddress = await instance.wallet.call();
                         const tokenAddress = await instance.moedaToken.call();
                         const token = MoedaToken.at(tokenAddress);
-                        const locked = await token.locked.call();
+                        const saleActive = await token.saleActive.call();
                         const teamBalance = await token.balanceOf.call(
                             teamAddress);
 
-                        assert.isFalse(locked);
+                        assert.isFalse(saleActive);
                         assert.strictEqual(teamBalance.toString(10), '0');
                     } catch (error) {
                         assertVmException(error);
@@ -462,8 +462,8 @@ contract('Crowdsale', (accounts) => {
 
                     const tokenAddress = await instance.moedaToken.call();
                     const token = MoedaToken.at(tokenAddress);
-                    const locked = await token.locked.call();
-                    assert.isFalse(locked);
+                    const saleActive = await token.saleActive.call();
+                    assert.isFalse(saleActive);
                 });
 
                 it('should throw when already disabled', async () => {
