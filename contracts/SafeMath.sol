@@ -1,7 +1,8 @@
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 
 /**
+ * Copyright (c) 2016 Smart Contract Solutions, Inc.
  * Math operations with safety checks
  */
 contract SafeMath {

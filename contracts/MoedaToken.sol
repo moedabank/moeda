@@ -1,7 +1,7 @@
 import './StandardToken.sol';
 import './Ownable.sol';
 
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 /// @title Moeda Loaylty Points token contract
 contract MoedaToken is StandardToken, Ownable {
@@ -12,19 +12,22 @@ contract MoedaToken is StandardToken, Ownable {
     // don't allow creation of more than this number of tokens
     uint public constant MAX_TOKENS = 20000000 ether;
     
-    // whether transfers are locked
-    bool public locked;
+    // transfers are locked during the sale
+    bool public saleActive;
+
+    // only emitted during the crowdsale
+    event Created(address indexed donor, uint256 tokensReceived);
 
     // determine whether transfers can be made
     modifier onlyAfterSale() {
-        if (locked) {
+        if (saleActive) {
             throw;
         }
         _;
     }
 
     modifier onlyDuringSale() {
-        if (!locked) {
+        if (!saleActive) {
             throw;
         }
         _;
@@ -32,28 +35,28 @@ contract MoedaToken is StandardToken, Ownable {
 
     /// @dev Create moeda token and lock transfers
     function MoedaToken() {
-        locked = true;
+        saleActive = true;
     }
 
     /// @dev unlock transfers
     /// @return true if successful
-    function unlock() onlyOwner returns (bool) {
-        locked = false;
-        return true;
+    function unlock() onlyOwner {
+        saleActive = false;
     }
 
-    /// @dev create tokens, only usable while locked
+    /// @dev create tokens, only usable while saleActive
     /// @param recipient address that will receive the created tokens
     /// @param amount the number of tokens to create
     /// @return true if successful
-    function create(address recipient, uint256 amount) onlyOwner onlyDuringSale returns(bool) {
+    function create(address recipient, uint256 amount)
+    onlyOwner onlyDuringSale {
         if (amount == 0) throw;
-        if (totalSupply + amount > MAX_TOKENS) throw;
+        if (safeAdd(totalSupply, amount) > MAX_TOKENS) throw;
 
         balances[recipient] = safeAdd(balances[recipient], amount);
         totalSupply = safeAdd(totalSupply, amount);
-        Transfer(0, recipient, amount);
-        return true;
+
+        Created(recipient, amount);
     }
 
     // transfer tokens

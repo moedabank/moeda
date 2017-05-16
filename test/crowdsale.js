@@ -1,12 +1,19 @@
 const Crowdsale = artifacts.require('./Crowdsale');
 const MoedaToken = artifacts.require('./MoedaToken');
+const Wallet = artifacts.require('./Wallet');
 const utils = require('./utils');
 const fail = utils.fail;
 const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
-const TEST_WALLET = '0x98a321f414d67f186e30bdac641e5ecf990397ae';
 
 contract('Crowdsale', (accounts) => {
+    let TEST_WALLET;
+    before(async () => {
+        const instance = await Wallet.new(
+            [accounts[0]], 1, web3.toWei(1000000000));
+        TEST_WALLET = instance.address;
+    });
+
     describe('constructor', () => {
         let instance;        
         before(async () => {
@@ -101,7 +108,7 @@ contract('Crowdsale', (accounts) => {
         });
     });
 
-    describe('getLimitAndRate()', () => {
+    describe('getLimitAndPrice()', () => {
         let instance;        
         before(async () => {
             instance = await Crowdsale.deployed();
@@ -109,43 +116,43 @@ contract('Crowdsale', (accounts) => {
 
         it('should return tier1 limit and tier1 rate for total < TIER1_CAP',
         async () => {
-            const value = await instance.getLimitAndRate.call(web3.toWei(10));
+            const value = await instance.getLimitAndPrice.call(web3.toWei(10));
             const limit = web3.fromWei(value[0]).toString(10);
-            const rate = web3.fromWei(value[1]).toString(10);
+            const rate = value[1].toString(10);
 
-            assert.strictEqual(limit, '30000');
-            assert.strictEqual(rate, '0.006');
+            assert.strictEqual(limit, '31250');
+            assert.strictEqual(rate, '160');
         });
 
         it('should return tier3 limit and tier2 rate for TIER1_CAP <= total' +
             ' < TIER2_CAP',
         async () => {
             const TIER1_CAP = await instance.TIER1_CAP.call();
-            const value = await instance.getLimitAndRate.call(TIER1_CAP);
+            const value = await instance.getLimitAndPrice.call(TIER1_CAP);
             const limit = web3.fromWei(value[0]).toString(10);
-            const rate = web3.fromWei(value[1]).toString(10);
+            const rate = value[1].toString(10);
 
-            assert.strictEqual(limit, '70000');
-            assert.strictEqual(rate, '0.008');
+            assert.strictEqual(limit, '71250');
+            assert.strictEqual(rate, '125');
         });
 
         it('should return ether cap limit and tier3 rate for TIER2_CAP <= ' +
             'total < TIER3_CAP',
         async () => {
             const TIER2_CAP = await instance.TIER2_CAP.call();
-            const value = await instance.getLimitAndRate.call(TIER2_CAP);
+            const value = await instance.getLimitAndPrice.call(TIER2_CAP);
             const limit = web3.fromWei(value[0]).toString(10);
-            const rate = web3.fromWei(value[1]).toString(10);
+            const rate = value[1].toString(10);
 
-            assert.strictEqual(limit, '130000');
-            assert.strictEqual(rate, '0.012');
+            assert.strictEqual(limit, '133750');
+            assert.strictEqual(rate, '80');
         });
 
         it('should throw if total is equal to cap', async () => {
             const ethercap = await instance.TIER3_CAP.call();
 
             try {
-                await instance.getLimitAndRate.call(ethercap);
+                await instance.getLimitAndPrice.call(ethercap);
                 fail('should have thrown');
             } catch (error) {
                 assertVmException(error);
@@ -168,29 +175,28 @@ contract('Crowdsale', (accounts) => {
         async () => {
             const amount = await instance.getTokenAmount.call(
                 0, web3.toWei(15));
-            const tier1_rate = await instance.TIER1_RATE.call();
-            const expectedAmount = web3.toWei(web3.toBigNumber(
-                web3.toWei(15)).div(tier1_rate).round(18, 1));
+            const TIER1_RATE = await instance.TIER1_RATE.call();
+            const expectedAmount = web3.toBigNumber(
+                web3.toWei(15)).mul(TIER1_RATE);
 
             assert.strictEqual(amount.toString(10), expectedAmount.toString(10));
         });
 
         it('should use 2 different rates when overlapping 2 tiers',
         async () => {
-            // 100 ether received previously, try to spend 30000 ether
+            // 100 ether received previously, try to spend 31270 ether
             const amount = await instance.getTokenAmount.call(
-                web3.toWei(100), web3.toWei(30000));
-            const tier1_rate = await instance.TIER1_RATE.call();
-            const tier2_rate = await instance.TIER2_RATE.call();
+                web3.toWei(100), web3.toWei(31270));
+            const TIER1_RATE = await instance.TIER1_RATE.call();
+            const TIER2_RATE = await instance.TIER2_RATE.call();
 
-            // we should get 29900 eth worth of tokens at the tier 1
-            // rate and an additional 100 eth worth at the tier 2 rate
+            // we should get 31150 eth worth of tokens at the tier 1
+            // rate and an additional 130 eth worth at the tier 2 rate
             const amountAtTier0 = web3.toBigNumber(
-                web3.toWei(29900)).div(tier1_rate);
+                web3.toWei(31150)).mul(TIER1_RATE);
             const amountAtTier1 = web3.toBigNumber(
-                web3.toWei(100)).div(tier2_rate);
-            const expectedAmount = web3.toWei(
-                amountAtTier0.plus(amountAtTier1).round(18, 1));
+                web3.toWei(120)).mul(TIER2_RATE);
+            const expectedAmount = amountAtTier0.plus(amountAtTier1);
 
             assert.strictEqual(
                 expectedAmount.toString(10), amount.toString(10));
@@ -198,27 +204,26 @@ contract('Crowdsale', (accounts) => {
 
         it('should use 3 different rates when overlapping 3 tiers',
         async () => {
-            // 100 ether received previously, try to spend 70000 ether
+            // 100 ether received previously, try to spend 71300 ether
             // this should overlap tier 1, 2 and 3
             const amount = await instance.getTokenAmount.call(
-                web3.toWei(100), web3.toWei(70000));
-            const tier1_rate = await instance.TIER1_RATE.call();
-            const tier2_rate = await instance.TIER2_RATE.call();
-            const tier3_rate = await instance.TIER3_RATE.call();
+                web3.toWei(100), web3.toWei(71300));
+            const TIER1_RATE = await instance.TIER1_RATE.call();
+            const TIER2_RATE = await instance.TIER2_RATE.call();
+            const TIER3_RATE = await instance.TIER3_RATE.call();
 
             // we should get 
-            // 29900 eth worth of tokens at the tier 1 rate
+            // 31150 eth worth of tokens at the tier 1 rate
             // 40000 eth worth of tokens at the tier 2 rate
-            //  100 eth worth of tokens at the tier 3 rate
+            //   150 eth worth of tokens at the tier 3 rate
             const amountAtTier1 = web3.toBigNumber(
-                web3.toWei(29900)).div(tier1_rate);
+                web3.toWei(31150)).mul(TIER1_RATE);
             const amountAtTier2 = web3.toBigNumber(
-                web3.toWei(40000)).div(tier2_rate);
+                web3.toWei(40000)).mul(TIER2_RATE);
             const amountAtTier3 = web3.toBigNumber(
-                web3.toWei(100)).div(tier3_rate);
-            const expectedAmount = web3.toWei(
-                amountAtTier1.plus(amountAtTier2)
-                    .plus(amountAtTier3).round(18, 1));
+                web3.toWei(150)).mul(TIER3_RATE);
+            const expectedAmount = amountAtTier1.plus(amountAtTier2)
+                    .plus(amountAtTier3);
 
             assert.strictEqual(
                 expectedAmount.toString(10), amount.toString(10));
@@ -229,12 +234,12 @@ contract('Crowdsale', (accounts) => {
             try {
                 const donation = web3.toBigNumber('4999999999999999999999');
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(125000), donation);
-                const tier3_rate = await instance.TIER3_RATE.call();
+                    web3.toWei(128750), donation);
+                const TIER3_RATE = await instance.TIER3_RATE.call();
 
                 // should get 49999.99999999999999999 worth at the tier 3 rate
-                const expectedAmount = web3.toWei(
-                    donation.div(tier3_rate).round(18, 1));
+                const expectedAmount = 
+                    donation.mul(TIER3_RATE);
                 assert.strictEqual(
                     amount.toString(10),
                     expectedAmount.toString(10));
@@ -247,13 +252,13 @@ contract('Crowdsale', (accounts) => {
         async () => {
             try {
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(125000),
+                    web3.toWei(128750),
                     web3.toWei(5000));
-                const tier3_rate = await instance.TIER3_RATE.call();
+                const TIER3_RATE = await instance.TIER3_RATE.call();
 
                 // should get 5000 worth at the tier 3 rate
-                const expectedAmount = web3.toWei(web3.toBigNumber(
-                web3.toWei(5000)).div(tier3_rate).round(18, 1));
+                const expectedAmount = web3.toBigNumber(
+                    web3.toWei(5000)).mul(TIER3_RATE);
                 assert.strictEqual(amount.toString(), expectedAmount.toString());
             } catch (error) {
                 fail('should not have thrown');
@@ -265,7 +270,7 @@ contract('Crowdsale', (accounts) => {
             // try to buy so much that we exceed the total cap
             try {
                 const amount = await instance.getTokenAmount.call(
-                    web3.toWei(125000),
+                    web3.toWei(128750),
                     '5000000000000000000001');
                 fail('should have thrown')
             } catch (error) {
@@ -352,7 +357,7 @@ contract('Crowdsale', (accounts) => {
                 }
             });
 
-            it('should throw if amount is less than minimum', async () => {
+            it('should throw if amount is less than DUST_LIMIT', async () => {
                 try {
                     await instance.sendTransaction({ 
                         from: accounts[2],
@@ -367,9 +372,10 @@ contract('Crowdsale', (accounts) => {
             it('should throw if donation would exceed maximum cap',
             async () => {
                 try {
+                    const TIER3_CAP = await instance.TIER3_CAP.call();
                     await instance.sendTransaction({ 
                         from: accounts[1],
-                        value: web3.toWei(131000)
+                        value: TIER3_CAP.plus(1)
                     });
                     fail('should have thrown');
                 } catch (error) {
@@ -389,6 +395,23 @@ contract('Crowdsale', (accounts) => {
                 assert.isAbove(
                     web3.fromWei(totalTokensAfter),
                     web3.fromWei(totalTokensBefore));
+            });
+
+            it('should send received ether to multisig wallet', async () => {
+                const etherBefore = await web3.eth.getBalance(TEST_WALLET);
+                const wallet = await instance.wallet.call();
+                const amount = web3.toWei(300);
+
+                await instance.sendTransaction({
+                    from: accounts[2],
+                    value: amount
+                });
+                const etherAfter = await web3.eth.getBalance(TEST_WALLET);
+
+                assert.strictEqual(wallet, TEST_WALLET);
+                assert.strictEqual(
+                    etherAfter.toString(10),
+                    etherBefore.plus(amount).toString(10));
             });
 
             it('should update ether recieved amount on success', async () => {
@@ -421,65 +444,144 @@ contract('Crowdsale', (accounts) => {
         });
 
         describe('finalize()', () => {
-            it('should set crowd sale to closed and unlock tokens', async () => {
-                await instance.finalize({ from: accounts[0] });
+            describe('when cap has not been reached', () => {
+                it('should throw and not credit presale, not unlock tokens',
+                async () => {
+                    try {
+                        await instance.finalize({ from: accounts[0] });
 
-                const crowdsaleClosed = await instance.crowdsaleClosed.call();
-                assert.isTrue(crowdsaleClosed);
+                        const teamAddress = await instance.wallet.call();
+                        const tokenAddress = await instance.moedaToken.call();
+                        const token = MoedaToken.at(tokenAddress);
+                        const saleActive = await token.saleActive.call();
+                        const teamBalance = await token.balanceOf.call(
+                            teamAddress);
 
-                const tokenAddress = await instance.moedaToken.call();
-                const token = MoedaToken.at(tokenAddress);
-                const locked = await token.locked.call();
-                assert.isFalse(locked);
+                        assert.isFalse(saleActive);
+                        assert.strictEqual(teamBalance.toString(10), '0');
+                    } catch (error) {
+                        assertVmException(error);
+                    }
+                });
             });
 
-            it('should throw when already disabled', async () => {
-                try {
+            describe('when cap has been reached', async () => {
+                it('should have generated max tokens', async () => {
+                    const cap = await instance.TIER3_CAP.call();
+                    await instance.sendTransaction({
+                            from: accounts[1], value: cap });
                     await instance.finalize({ from: accounts[0] });
-                    await instance.finalize({ from: accounts[0] });
-                    fail('should have thrown');
-                } catch (error) {
-                    assertVmException(error);
-                }
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const TOKEN_MAX = await token.MAX_TOKENS.call();
+                    const totalSupply = await token.totalSupply.call();
+
+                    assert.strictEqual(
+                        TOKEN_MAX.toString(10), totalSupply.toString(10));
+                });
             });
 
-            it('should assign presale tokens to team wallet', async () => {
-                // make some buys to reach cap, to test that we can create
-                // presale tokens even when cap is reached and that the total
-                // matches what is expected
-                await instance.sendTransaction({ from: accounts[1], value: web3.toWei(75000) });
-                await instance.sendTransaction({ from: accounts[2], value: web3.toWei(35000) });
-                await instance.sendTransaction({ from: accounts[3], value: web3.toWei(20000) });
+            describe('when less than DUST_LIMIT remains until crowdsale cap',
+            () => {
+                beforeEach(async () => {
+                    // If remaining amount is less than dust limit we can 
+                    // complete the sale
+                    const cap = await instance.TIER3_CAP.call();
+                    const dust_limit = await instance.DUST_LIMIT.call();
+                    await instance.sendTransaction({
+                        from: accounts[1], value: cap.sub(dust_limit.sub(1)) });
+                });
 
-                await instance.finalize({ from: accounts[0] });
+                it('should set crowd sale to closed and unlock tokens if cap reached',
+                async () => {
+                    await instance.finalize({ from: accounts[0] });
 
-                const tokenAddress = await instance.moedaToken.call();
-                const token = MoedaToken.at(tokenAddress);
-                const presaleTokens = await instance.PRESALE_TOKEN_AMOUNT.call();
-                const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+                    const crowdsaleClosed = await instance.crowdsaleClosed.call();
+                    assert.isTrue(crowdsaleClosed);
 
-                assert.strictEqual(
-                    teamWalletBalance.toString(10), web3.toWei(5000000));
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const saleActive = await token.saleActive.call();
+                    assert.isFalse(saleActive);
+                });
 
-                const TOKEN_MAX = await token.MAX_TOKENS.call();
-                const totalSupply = await token.totalSupply.call();
+                it('should throw when already disabled', async () => {
+                    try {
+                        // make sure cap has been reached
+                        const cap = await instance.TIER3_CAP.call();
+                        await instance.sendTransaction({
+                            from: accounts[1], value: cap });
 
-                // 2 wei rounding error due to precision problems
-                assert.isAtMost(
-                    totalSupply.toString(10), TOKEN_MAX.toString(10));
+                        await instance.finalize({ from: accounts[0] });
+                        await instance.finalize({ from: accounts[0] });
+                        fail('should have thrown');
+                    } catch (error) {
+                        assertVmException(error);
+                    }
+                });
+
+                it('should assign presale tokens to team wallet', async () => {
+                    await instance.finalize({ from: accounts[0] });
+
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
+                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+
+                    assert.strictEqual(
+                        teamWalletBalance.toString(10), web3.toWei(5000000));
+
+                    const TOKEN_MAX = await token.MAX_TOKENS.call();
+                    const totalSupply = await token.totalSupply.call();
+
+                    assert.strictEqual(
+                        totalSupply.toString(10),
+                        '19999984000000000000000080');
+                });
             });
         });
     });
     
     describe('after sale has ended', () => {
+        let instance;
+        beforeEach(async () => {
+            let currentBlock = web3.eth.blockNumber;
+            const saleDuration = 10;
+            const startBlock = currentBlock + 8;
+            const endBlock = startBlock + saleDuration;
+
+            instance = await Crowdsale.new(
+                TEST_WALLET, startBlock, endBlock);
+            await fastForwardToBlock(instance, 'endBlock');
+
+            currentBlock = web3.eth.blockNumber;
+            assert.isAtLeast(
+                currentBlock, endBlock, 'sale should have ended');
+        });
+
+        describe('finalize()', () => {
+            it('should not throw, credit presale tokens and unlock tokens',
+            async () => {
+                try {
+                    await instance.finalize(({ from: accounts[0] }));
+                    const closed = await instance.crowdsaleClosed.call();
+                    assert.isTrue(closed);
+
+                    const tokenAddress = await instance.moedaToken.call();
+                    const token = MoedaToken.at(tokenAddress);
+                    const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
+                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+
+                    assert.strictEqual(
+                        teamWalletBalance.toString(10), web3.toWei(5000000));
+                } catch (error) {
+                    fail(`should not have thrown ${error}`);
+                }
+            });
+        });
+
         describe('when we receive ether', () => {
             it('should throw', async () => {
-                const instance = await Crowdsale.deployed();
-                const endBlock = await instance.endBlock.call();
-                assert.isAtLeast(
-                    web3.eth.blockNumber, endBlock, 'sale should have ended');
-                const limit = await instance.TIER3_CAP.call();
-
                 try {
                     await instance.sendTransaction({ 
                         value: web3.toWei(1),

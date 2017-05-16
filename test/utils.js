@@ -7,7 +7,7 @@ module.exports = {
         throw new Error(message);
     },
     assertVmException(error) {
-        assert.include(error.message, 'invalid JUMP');
+        assert.include(error.message, 'invalid opcode');
     },
     async mineUntilBlock(web3, blockNumber) {
         const currentBlock = web3.eth.blockNumber;
@@ -25,7 +25,13 @@ module.exports = {
         const watcher = instance[eventName]();
         const events = await new Promise(
             (resolve, reject) => watcher.get(
-                (err, res) => err ? reject(err) : resolve(res)));
+                (error, result) => {
+                    watcher.stopWatching();
+                    if (error) {
+                        return reject(error);
+                    }
+                    resolve(result);
+                }));
 
         return events[events.length - 1].args;
     },

@@ -2,7 +2,7 @@ import './SafeMath.sol';
 import './Ownable.sol';
 import './MoedaToken.sol';
 
-pragma solidity ^0.4.8;
+pragma solidity ^0.4.11;
 
 /// @title Moeda crowdsale
 contract Crowdsale is Ownable, SafeMath {
@@ -15,26 +15,26 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public startBlock;          // block where sale starts
     uint256 public endBlock;            // block where sale ends
 
-    // wallet address that will receive tokens sold during presale
-    address public presaleWallet;
+    // used to scale token amounts to 18 decimals
+    uint256 public constant TOKEN_MULTIPLIER = 10 ** 18;
 
-    // number of tokens sold during presale
-    uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 ether;
+    // number of tokens allocated to presale (prior to crowdsale)
+    uint256 public constant PRESALE_TOKEN_ALLOCATION = 5000000 * TOKEN_MULTIPLIER;
     
     // smallest possible donation
-    uint256 public constant MINIMUM_BUY = 200 finney;
+    uint256 public constant DUST_LIMIT = 200 finney;
 
-    // token creation rates
-    uint256 public constant TIER1_RATE = 6 finney;
-    uint256 public constant TIER2_RATE = 8 finney;
-    uint256 public constant TIER3_RATE = 12 finney;
+    // token generation rates (tokens per eth)
+    uint256 public constant TIER1_RATE = 160;
+    uint256 public constant TIER2_RATE = 125;
+    uint256 public constant TIER3_RATE = 80;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER1_CAP =  30000 ether;
-    uint256 public constant TIER2_CAP =  70000 ether;
-    uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
+    uint256 public constant TIER1_CAP =  31250 ether;
+    uint256 public constant TIER2_CAP =  71250 ether;
+    uint256 public constant TIER3_CAP = 133750 ether; // Total ether cap
 
-    event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
+    event Purchase(address indexed donor, uint256 amount, uint256 tokenAmount);
 
     modifier onlyDuringSale() {
         if (crowdsaleClosed) {
@@ -71,50 +71,59 @@ contract Crowdsale is Ownable, SafeMath {
     /// donated ethers
     /// @param totalReceived amount of ether that has been received
     /// @return pair of the current tier's donation limit and a token creation rate
-    function getLimitAndRate(uint256 totalReceived)
+    function getLimitAndPrice(uint256 totalReceived)
     constant returns (uint256, uint256) {
         uint256 limit = 0;
-        uint256 rate = 0;
+        uint256 price = 0;
 
         if (totalReceived < TIER1_CAP) {
             limit = TIER1_CAP;
-            rate = TIER1_RATE;
+            price = TIER1_RATE;
         }
         else if (totalReceived < TIER2_CAP) {
             limit = TIER2_CAP;
-            rate = TIER2_RATE;
+            price = TIER2_RATE;
         }
         else if (totalReceived < TIER3_CAP) {
             limit = TIER3_CAP;
-            rate = TIER3_RATE;
+            price = TIER3_RATE;
         } else {
             throw; // this shouldn't happen
         }
 
-        return (limit, rate);
+        return (limit, price);
     }
 
-    /// @dev Determine how many tokens we can get from each pricing tier, in case a
-    /// donation's amount overlaps multiple pricing tiers.
-    /// 1. determine cheapest token price
-    /// 2. determine how many tokens can be bought at this price
-    /// 3. subtract spent ether from requested amount
-    /// 4. if there is any ether left, start over from 1, with the remaining ether
-    /// 5. return the amount of tokens bought
+    /// @dev Determine how many tokens we can get from each pricing tier, in
+    /// case a donation's amount overlaps multiple pricing tiers.
+    ///
     /// @param totalReceived ether received by contract plus spent by this donation
     /// @param requestedAmount total ether to spend on tokens in a donation
     /// @return amount of tokens to get for the requested ether donation
     function getTokenAmount(uint256 totalReceived, uint256 requestedAmount) 
     constant returns (uint256) {
+
+        // base case, we've spent the entire donation and can stop
         if (requestedAmount == 0) return 0;
         uint256 limit = 0;
-        uint256 rate = 0;
-        (limit, rate) = getLimitAndRate(totalReceived);
+        uint256 price = 0;
+        
+        // 1. Determine cheapest token price
+        (limit, price) = getLimitAndPrice(totalReceived);
 
+        // 2. Since there are multiple pricing levels based on how much has been
+        // received so far, we need to determine how much can be spent at
+        // any given tier. This in case a donation will overlap more than one 
+        // tier
         uint256 maxETHSpendableInTier = safeSub(limit, totalReceived);
         uint256 amountToSpend = min256(maxETHSpendableInTier, requestedAmount);
-        uint256 tokensToReceiveAtCurrentPrice = safeDiv(
-            safeMul(amountToSpend, 1 ether), rate);
+
+        // 3. Given a price determine how many tokens the unspent ether in this 
+        // donation will get you
+        uint256 tokensToReceiveAtCurrentPrice = safeMul(amountToSpend, price);
+
+        // You've spent everything you could at this level, continue to the next
+        // one, in case there is some ETH left unspent in this donation.
         uint256 additionalTokens = getTokenAmount(
             safeAdd(totalReceived, amountToSpend),
             safeSub(requestedAmount, amountToSpend));
@@ -122,37 +131,38 @@ contract Crowdsale is Ownable, SafeMath {
         return safeAdd(tokensToReceiveAtCurrentPrice, additionalTokens);
     }
 
+    /// grant tokens to buyer when we receive ether
     /// @dev buy tokens, only usable while crowdsale is active
-    function processBuy() internal returns (bool) {
-        if (msg.value < MINIMUM_BUY) throw;
+    function () payable onlyDuringSale {
+        if (msg.value < DUST_LIMIT) throw;
         if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
-        if (!wallet.send(msg.value)) throw;
 
         uint256 tokenAmount = getTokenAmount(etherReceived, msg.value);
 
-        if (!moedaToken.create(msg.sender, tokenAmount)) throw;
+        moedaToken.create(msg.sender, tokenAmount);
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
-        Buy(msg.sender, msg.value, tokenAmount);
+        Purchase(msg.sender, msg.value, tokenAmount);
 
-        return true;
+        if (!wallet.send(msg.value)) throw;
     }
 
-    // grant tokens to buyer when we receive ether
-    function () payable onlyDuringSale {
-        if (!processBuy()) throw;
-    }
-
-    /// @dev close the crowdsale and unlock the tokens
+    /// @dev close the crowdsale manually and unlock the tokens
+    /// this will only be successful if not already executed,
+    /// if endBlock has been reached, or if the cap has been reached
     function finalize() onlyOwner {
         if (block.number < startBlock) throw;
         if (crowdsaleClosed) throw;
 
+        // if amount remaining is too small we can allow sale to end earlier
+        uint256 amountRemaining = safeSub(TIER3_CAP, etherReceived);
+        if (block.number < endBlock && amountRemaining >= DUST_LIMIT) throw;
+
         // create and assign presale tokens to team wallet
-        if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
+        moedaToken.create(wallet, PRESALE_TOKEN_ALLOCATION);
 
         // unlock tokens for spending
-        if(!moedaToken.unlock()) throw;
+        moedaToken.unlock();
         crowdsaleClosed = true;
     }
 }
