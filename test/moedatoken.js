@@ -81,6 +81,24 @@ contract('MoedaToken', (accounts) => {
                 assertVmException(error);
             }
         });
+
+        it('should emit a Created event on success', async () => {
+            const instance = await MoedaToken.new();
+
+            try {
+                await instance.create(
+                    accounts[1], web3.toWei(500), { from: accounts[0] });
+                const event = await utils.getLatestEvent(
+                    instance, 'Created');
+
+                assert.strictEqual(event.donor, accounts[1]);
+                assert.strictEqual(
+                    event.tokensReceived.toString(10),
+                    web3.toWei(500).toString(10));
+            } catch (error) {
+                fail(`should not have thrown ${error}`);
+            }
+        });
     });
 
     describe('unlock()', () => {

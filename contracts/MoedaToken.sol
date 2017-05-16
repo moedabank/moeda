@@ -15,6 +15,9 @@ contract MoedaToken is StandardToken, Ownable {
     // whether transfers are locked
     bool public locked;
 
+    // only emitted during the crowdsale
+    event Created(address indexed donor, uint256 tokensReceived);
+
     // determine whether transfers can be made
     modifier onlyAfterSale() {
         if (locked) {
@@ -46,13 +49,15 @@ contract MoedaToken is StandardToken, Ownable {
     /// @param recipient address that will receive the created tokens
     /// @param amount the number of tokens to create
     /// @return true if successful
-    function create(address recipient, uint256 amount) onlyOwner onlyDuringSale returns(bool) {
+    function create(address recipient, uint256 amount) onlyOwner onlyDuringSale
+    returns(bool) {
         if (amount == 0) throw;
         if (totalSupply + amount > MAX_TOKENS) throw;
 
         balances[recipient] = safeAdd(balances[recipient], amount);
         totalSupply = safeAdd(totalSupply, amount);
-        Transfer(0, recipient, amount);
+
+        Created(recipient, amount);
         return true;
     }
 
