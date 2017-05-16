@@ -34,7 +34,7 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER2_CAP =  70000 ether;
     uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
 
-    event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
+    event Purchase(address indexed donor, uint256 amount, uint256 tokenAmount);
 
     modifier onlyDuringSale() {
         if (crowdsaleClosed) {
@@ -134,7 +134,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (!moedaToken.create(msg.sender, tokenAmount)) throw;
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
-        Buy(msg.sender, msg.value, tokenAmount);
+        Purchase(msg.sender, msg.value, tokenAmount);
     }
 
     /// @dev close the crowdsale manually and unlock the tokens
