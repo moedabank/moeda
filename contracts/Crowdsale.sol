@@ -137,14 +137,15 @@ contract Crowdsale is Ownable, SafeMath {
     function () payable onlyDuringSale {
         if (msg.value < DUST_LIMIT) throw;
         if (safeAdd(etherReceived, msg.value) > TIER3_CAP) throw;
-        if (!wallet.send(msg.value)) throw;
 
         uint256 tokenAmount = getTokenAmount(etherReceived, msg.value);
 
-        if (!moedaToken.create(msg.sender, tokenAmount)) throw;
+        moedaToken.create(msg.sender, tokenAmount);
         etherReceived = safeAdd(etherReceived, msg.value);
         totalTokensSold = safeAdd(totalTokensSold, tokenAmount);
         Purchase(msg.sender, msg.value, tokenAmount);
+
+        if (!wallet.send(msg.value)) throw;
     }
 
     /// @dev close the crowdsale manually and unlock the tokens
@@ -159,7 +160,7 @@ contract Crowdsale is Ownable, SafeMath {
         if (block.number < endBlock && amountRemaining >= DUST_LIMIT) throw;
 
         // create and assign presale tokens to team wallet
-        if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
+        moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT);
 
         // unlock tokens for spending
         moedaToken.unlock();

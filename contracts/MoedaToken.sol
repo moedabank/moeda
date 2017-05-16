@@ -48,8 +48,8 @@ contract MoedaToken is StandardToken, Ownable {
     /// @param recipient address that will receive the created tokens
     /// @param amount the number of tokens to create
     /// @return true if successful
-    function create(address recipient, uint256 amount) onlyOwner onlyDuringSale
-    returns(bool) {
+    function create(address recipient, uint256 amount)
+    onlyOwner onlyDuringSale {
         if (amount == 0) throw;
         if (safeAdd(totalSupply, amount) > MAX_TOKENS) throw;
 
@@ -57,7 +57,6 @@ contract MoedaToken is StandardToken, Ownable {
         totalSupply = safeAdd(totalSupply, amount);
 
         Created(recipient, amount);
-        return true;
     }
 
     // transfer tokens
