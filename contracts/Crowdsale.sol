@@ -144,10 +144,9 @@ contract Crowdsale is Ownable, SafeMath {
         if (block.number < startBlock) throw;
         if (crowdsaleClosed) throw;
 
-        // if amount remaining is less than dust limit, allow sale to be
-        // completed early
-        uint256 minCapRequirement = safeAdd(etherReceived, DUST_LIMIT);
-        if (block.number < endBlock && minCapRequirement < TIER3_CAP) throw;
+        // if amount remaining is too small we can allow sale to end earlier
+        uint256 amountRemaining = safeSub(TIER3_CAP, etherReceived);
+        if (block.number < endBlock && amountRemaining >= DUST_LIMIT) throw;
 
         // create and assign presale tokens to team wallet
         if (!moedaToken.create(wallet, PRESALE_TOKEN_AMOUNT)) throw;
