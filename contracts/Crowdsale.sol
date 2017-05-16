@@ -18,8 +18,11 @@ contract Crowdsale is Ownable, SafeMath {
     // wallet address that will receive tokens sold during presale
     address public presaleWallet;
 
+    // used to scale token amounts to 18 decimals
+    uint256 public constant TOKEN_MULTIPLIER = 10 ** 18;
+
     // number of tokens sold during presale
-    uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 ether;
+    uint256 public constant PRESALE_TOKEN_AMOUNT = 5000000 * TOKEN_MULTIPLIER;
     
     // smallest possible donation
     uint256 public constant DUST_LIMIT = 200 finney;
@@ -30,9 +33,9 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER3_RATE = 12 finney;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER1_CAP =  30000 ether;
-    uint256 public constant TIER2_CAP =  70000 ether;
-    uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
+    uint256 public constant TIER1_CAP =  30000 * TOKEN_MULTIPLIER;
+    uint256 public constant TIER2_CAP =  70000 * TOKEN_MULTIPLIER;
+    uint256 public constant TIER3_CAP = 130000 * TOKEN_MULTIPLIER; // Total ether cap
 
     event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
 
@@ -114,7 +117,7 @@ contract Crowdsale is Ownable, SafeMath {
         uint256 maxETHSpendableInTier = safeSub(limit, totalReceived);
         uint256 amountToSpend = min256(maxETHSpendableInTier, requestedAmount);
         uint256 tokensToReceiveAtCurrentPrice = safeDiv(
-            safeMul(amountToSpend, 1 ether), rate);
+            safeMul(amountToSpend, TOKEN_MULTIPLIER), rate);
         uint256 additionalTokens = getTokenAmount(
             safeAdd(totalReceived, amountToSpend),
             safeSub(requestedAmount, amountToSpend));
