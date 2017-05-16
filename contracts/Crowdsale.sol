@@ -24,15 +24,15 @@ contract Crowdsale is Ownable, SafeMath {
     // smallest possible donation
     uint256 public constant DUST_LIMIT = 200 finney;
 
-    // token creation prices
-    uint256 public constant TIER1_PRICE = 6 finney;
-    uint256 public constant TIER2_PRICE = 8 finney;
-    uint256 public constant TIER3_PRICE = 12 finney;
+    // token generation rates (tokens per eth)
+    uint256 public constant TIER1_RATE = 160;
+    uint256 public constant TIER2_RATE = 125;
+    uint256 public constant TIER3_RATE = 80;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER1_CAP =  30000 ether;
-    uint256 public constant TIER2_CAP =  70000 ether;
-    uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
+    uint256 public constant TIER1_CAP =  31250 ether;
+    uint256 public constant TIER2_CAP =  71250 ether;
+    uint256 public constant TIER3_CAP = 133750 ether; // Total ether cap
 
     event Purchase(address indexed donor, uint256 amount, uint256 tokenAmount);
 
@@ -78,15 +78,15 @@ contract Crowdsale is Ownable, SafeMath {
 
         if (totalReceived < TIER1_CAP) {
             limit = TIER1_CAP;
-            price = TIER1_PRICE;
+            price = TIER1_RATE;
         }
         else if (totalReceived < TIER2_CAP) {
             limit = TIER2_CAP;
-            price = TIER2_PRICE;
+            price = TIER2_RATE;
         }
         else if (totalReceived < TIER3_CAP) {
             limit = TIER3_CAP;
-            price = TIER3_PRICE;
+            price = TIER3_RATE;
         } else {
             throw; // this shouldn't happen
         }
@@ -120,8 +120,7 @@ contract Crowdsale is Ownable, SafeMath {
 
         // 3. Given a price determine how many tokens the unspent ether in this 
         // donation will get you
-        uint256 tokensToReceiveAtCurrentPrice = safeDiv(
-            safeMul(amountToSpend, TOKEN_MULTIPLIER), price);
+        uint256 tokensToReceiveAtCurrentPrice = safeMul(amountToSpend, price);
 
         // You've spent everything you could at this level, continue to the next
         // one, in case there is some ETH left unspent in this donation.
