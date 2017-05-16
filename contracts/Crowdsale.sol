@@ -33,9 +33,9 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER3_RATE = 12 finney;
 
     // limits for each pricing tier (how much can be bought)
-    uint256 public constant TIER1_CAP =  30000 * TOKEN_MULTIPLIER;
-    uint256 public constant TIER2_CAP =  70000 * TOKEN_MULTIPLIER;
-    uint256 public constant TIER3_CAP = 130000 * TOKEN_MULTIPLIER; // Total ether cap
+    uint256 public constant TIER1_CAP =  30000 ether;
+    uint256 public constant TIER2_CAP =  70000 ether;
+    uint256 public constant TIER3_CAP = 130000 ether; // Total ether cap
 
     event Buy(address indexed donor, uint256 amount, uint256 tokenAmount);
 
