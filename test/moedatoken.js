@@ -229,15 +229,6 @@ contract('MoedaToken', (accounts) => {
                 allowance.toString(), amount.toString());
         });
 
-        it('should throw if sender has no balance', async () => {
-            try {
-                await instance.approve(accounts[1], accounts[2], 5);
-                fail('should have thrown');
-            } catch (error) {
-                assertVmException(error);
-            }
-        });
-
         it('should emit an approval event', async () => {
             await instance.create(accounts[1], web3.toWei(15));
             const amount = web3.toWei(9);
