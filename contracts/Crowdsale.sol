@@ -24,10 +24,10 @@ contract Crowdsale is Ownable, SafeMath {
     // smallest possible donation
     uint256 public constant DUST_LIMIT = 200 finney;
 
-    // token creation rates
-    uint256 public constant TIER1_RATE = 6 finney;
-    uint256 public constant TIER2_RATE = 8 finney;
-    uint256 public constant TIER3_RATE = 12 finney;
+    // token creation prices
+    uint256 public constant TIER1_PRICE = 6 finney;
+    uint256 public constant TIER2_PRICE = 8 finney;
+    uint256 public constant TIER3_PRICE = 12 finney;
 
     // limits for each pricing tier (how much can be bought)
     uint256 public constant TIER1_CAP =  30000 ether;
@@ -71,50 +71,60 @@ contract Crowdsale is Ownable, SafeMath {
     /// donated ethers
     /// @param totalReceived amount of ether that has been received
     /// @return pair of the current tier's donation limit and a token creation rate
-    function getLimitAndRate(uint256 totalReceived)
+    function getLimitAndPrice(uint256 totalReceived)
     constant returns (uint256, uint256) {
         uint256 limit = 0;
-        uint256 rate = 0;
+        uint256 price = 0;
 
         if (totalReceived < TIER1_CAP) {
             limit = TIER1_CAP;
-            rate = TIER1_RATE;
+            price = TIER1_PRICE;
         }
         else if (totalReceived < TIER2_CAP) {
             limit = TIER2_CAP;
-            rate = TIER2_RATE;
+            price = TIER2_PRICE;
         }
         else if (totalReceived < TIER3_CAP) {
             limit = TIER3_CAP;
-            rate = TIER3_RATE;
+            price = TIER3_PRICE;
         } else {
             throw; // this shouldn't happen
         }
 
-        return (limit, rate);
+        return (limit, price);
     }
 
-    /// @dev Determine how many tokens we can get from each pricing tier, in case a
-    /// donation's amount overlaps multiple pricing tiers.
-    /// 1. determine cheapest token price
-    /// 2. determine how many tokens can be bought at this price
-    /// 3. subtract spent ether from requested amount
-    /// 4. if there is any ether left, start over from 1, with the remaining ether
-    /// 5. return the amount of tokens bought
+    /// @dev Determine how many tokens we can get from each pricing tier, in
+    /// case a donation's amount overlaps multiple pricing tiers.
+    ///
     /// @param totalReceived ether received by contract plus spent by this donation
     /// @param requestedAmount total ether to spend on tokens in a donation
     /// @return amount of tokens to get for the requested ether donation
     function getTokenAmount(uint256 totalReceived, uint256 requestedAmount) 
     constant returns (uint256) {
+
+        // base case, we've spent the entire donation and can stop
         if (requestedAmount == 0) return 0;
         uint256 limit = 0;
-        uint256 rate = 0;
-        (limit, rate) = getLimitAndRate(totalReceived);
+        uint256 price = 0;
+        
+        // 1. Determine cheapest token price
+        (limit, price) = getLimitAndPrice(totalReceived);
 
+        // 2. Since there are multiple pricing levels based on how much has been
+        // received so far, we need to determine how much can be spent at
+        // any given tier. This in case a donation will overlap more than one 
+        // tier
         uint256 maxETHSpendableInTier = safeSub(limit, totalReceived);
         uint256 amountToSpend = min256(maxETHSpendableInTier, requestedAmount);
+
+        // 3. Given a price determine how many tokens the unspent ether in this 
+        // donation will get you
         uint256 tokensToReceiveAtCurrentPrice = safeDiv(
-            safeMul(amountToSpend, TOKEN_MULTIPLIER), rate);
+            safeMul(amountToSpend, TOKEN_MULTIPLIER), price);
+
+        // You've spent everything you could at this level, continue to the next
+        // one, in case there is some ETH left unspent in this donation.
         uint256 additionalTokens = getTokenAmount(
             safeAdd(totalReceived, amountToSpend),
             safeSub(requestedAmount, amountToSpend));
