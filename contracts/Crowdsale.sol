@@ -1,6 +1,7 @@
 import './SafeMath.sol';
 import './Ownable.sol';
 import './MoedaToken.sol';
+import './ERC20.sol';
 
 pragma solidity ^0.4.11;
 
@@ -34,7 +35,11 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant TIER2_CAP =  71250 ether;
     uint256 public constant TIER3_CAP = 133750 ether; // Total ether cap
 
+    // Log a purchase
     event Purchase(address indexed donor, uint256 amount, uint256 tokenAmount);
+
+    // Log transfer of tokens that were sent to this contract by mistake
+    event TokenDrain(address token, address to, uint256 amount);
 
     modifier onlyDuringSale() {
         if (crowdsaleClosed) {
@@ -164,5 +169,16 @@ contract Crowdsale is Ownable, SafeMath {
         // unlock tokens for spending
         moedaToken.unlock();
         crowdsaleClosed = true;
+    }
+
+    /// @dev Drain tokens that were sent here by mistake
+    /// because people will.
+    /// @param _token address of token to transfer
+    /// @param _to address where tokens will be transferred
+    function drainToken(address _token, address _to) onlyOwner {
+        ERC20 token = ERC20(_token);
+        uint256 balance = token.balanceOf(this);
+        token.transfer(_to, balance);
+        TokenDrain(_token, _to, balance);
     }
 }

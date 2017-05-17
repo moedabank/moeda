@@ -14,6 +14,27 @@ contract('Crowdsale', (accounts) => {
         TEST_WALLET = instance.address;
     });
 
+    describe('drainToken', () => {
+        it('should transfer given token and log it', async () => {
+            const instance = await Crowdsale.deployed();
+            const testToken = await MoedaToken.new();
+            const tokenAmount = web3.toWei(150);
+
+            await testToken.create(instance.address, tokenAmount);
+            await testToken.unlock();
+            await instance.drainToken(testToken.address, accounts[2]);
+            const event = await utils.getLatestEvent(instance, 'TokenDrain');
+            const tokenBalance = await testToken.balanceOf.call(instance.address);
+            const receiverBalance = await testToken.balanceOf.call(accounts[2]);
+
+            assert.strictEqual(event.token, testToken.address);
+            assert.strictEqual(event.to, accounts[2]);
+            assert.strictEqual(event.amount.toString(10), tokenAmount);
+            assert.strictEqual(tokenBalance.toString(10), '0');
+            assert.strictEqual(receiverBalance.toString(10), tokenAmount);
+        });
+    });
+
     describe('constructor', () => {
         let instance;        
         before(async () => {
