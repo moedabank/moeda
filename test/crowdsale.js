@@ -380,9 +380,10 @@ contract('Crowdsale', (accounts) => {
 
             it('should throw if amount is less than DUST_LIMIT', async () => {
                 try {
+                    const dust_limit = await instance.DUST_LIMIT.call();
                     await instance.sendTransaction({ 
                         from: accounts[2],
-                        value: web3.toWei('0.19')
+                        value: dust_limit.sub(1)
                     });
                     fail('should have thrown');
                 } catch (error) {
@@ -557,7 +558,7 @@ contract('Crowdsale', (accounts) => {
 
                     assert.strictEqual(
                         totalSupply.toString(10),
-                        '19999984000000000000000080');
+                        '19999999920000000000000080');
                 });
             });
         });

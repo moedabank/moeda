@@ -23,7 +23,7 @@ contract Crowdsale is Ownable, SafeMath {
     uint256 public constant PRESALE_TOKEN_ALLOCATION = 5000000 * TOKEN_MULTIPLIER;
     
     // smallest possible donation
-    uint256 public constant DUST_LIMIT = 200 finney;
+    uint256 public constant DUST_LIMIT = 1 finney;
 
     // token generation rates (tokens per eth)
     uint256 public constant TIER1_RATE = 160;
