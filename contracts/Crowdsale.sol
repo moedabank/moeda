@@ -166,7 +166,7 @@ contract Crowdsale is Ownable, SafeMath {
         uint256 amountRemaining = safeSub(TIER3_CAP, etherReceived);
         if (block.number < endBlock && amountRemaining >= DUST_LIMIT) throw;
 
-        // create and assign presale tokens to team wallet
+        // create and assign presale tokens to presale wallet
         moedaToken.create(PRESALE_WALLET, PRESALE_TOKEN_ALLOCATION);
 
         // unlock tokens for spending

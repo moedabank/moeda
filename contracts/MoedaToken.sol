@@ -39,7 +39,6 @@ contract MoedaToken is StandardToken, Ownable {
     }
 
     /// @dev unlock transfers
-    /// @return true if successful
     function unlock() onlyOwner {
         saleActive = false;
     }
@@ -47,7 +46,6 @@ contract MoedaToken is StandardToken, Ownable {
     /// @dev create tokens, only usable while saleActive
     /// @param recipient address that will receive the created tokens
     /// @param amount the number of tokens to create
-    /// @return true if successful
     function create(address recipient, uint256 amount)
     onlyOwner onlyDuringSale {
         if (amount == 0) throw;
