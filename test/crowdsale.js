@@ -107,6 +107,13 @@ contract('Crowdsale', (accounts) => {
             assert.notStrictEqual(wallet, NULL_ADDRESS)
         });
 
+        it('should have a presale wallet address', async () => {
+            const presaleWallet = await instance.PRESALE_WALLET.call();
+            assert.strictEqual(
+                presaleWallet,
+                '0x30B3C64d43e7A1E8965D934Fa96a3bFB33Eee0d2'.toLowerCase());
+        });
+
         it('should assign crowdsale closed boolean', async () => {
             const crowdsaleClosed = await instance.crowdsaleClosed.call();
 
@@ -548,10 +555,11 @@ contract('Crowdsale', (accounts) => {
                     const tokenAddress = await instance.moedaToken.call();
                     const token = MoedaToken.at(tokenAddress);
                     const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
-                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+                    const presaleWallet = await instance.PRESALE_WALLET.call();
+                    const presaleWalletBalance = await token.balanceOf.call(presaleWallet);
 
                     assert.strictEqual(
-                        teamWalletBalance.toString(10), web3.toWei(5000000));
+                        presaleWalletBalance.toString(10), web3.toWei(5000000));
 
                     const TOKEN_MAX = await token.MAX_TOKENS.call();
                     const totalSupply = await token.totalSupply.call();
@@ -591,11 +599,12 @@ contract('Crowdsale', (accounts) => {
 
                     const tokenAddress = await instance.moedaToken.call();
                     const token = MoedaToken.at(tokenAddress);
+                    const presaleWallet = await instance.PRESALE_WALLET.call();
                     const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
-                    const teamWalletBalance = await token.balanceOf.call(TEST_WALLET);
+                    const presaleWalletBalance = await token.balanceOf.call(presaleWallet);
 
                     assert.strictEqual(
-                        teamWalletBalance.toString(10), web3.toWei(5000000));
+                        presaleWalletBalance.toString(10), web3.toWei(5000000));
                 } catch (error) {
                     fail(`should not have thrown ${error}`);
                 }
