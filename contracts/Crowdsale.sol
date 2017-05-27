@@ -179,6 +179,8 @@ contract Crowdsale is Ownable, SafeMath {
     /// @param _token address of token to transfer
     /// @param _to address where tokens will be transferred
     function drainToken(address _token, address _to) onlyOwner {
+        if (_token == address(0)) throw;
+        if (_to == address(0)) throw;
         ERC20 token = ERC20(_token);
         uint256 balance = token.balanceOf(this);
         token.transfer(_to, balance);
