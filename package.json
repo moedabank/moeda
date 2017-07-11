@@ -1,6 +1,6 @@
 {
   "name": "moeda-contracts",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Crowdsale contracts for Moeda",
   "main": "truffle.js",
   "directories": {
@@ -20,9 +20,9 @@
   },
   "homepage": "https://github.com/erkmos/moeda#readme",
   "devDependencies": {
-    "chai": "3.5.0",
+    "chai": "4.0.2",
     "ethereumjs-testrpc": "3.0.5",
-    "truffle": "3.2.2",
-    "web3": "0.19.0"
+    "truffle": "3.2.5",
+    "web3": "0.19.1"
   }
 }

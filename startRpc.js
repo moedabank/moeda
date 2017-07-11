@@ -2,7 +2,7 @@ const testrpc = require('ethereumjs-testrpc');
 
 const megaBalance = '57896044618658097711785492504343953926634992332820282019728792003956564819968';
 const options = {
-    port: '8545',
+    port: '8945',
     accounts: [
         {
             secretKey: '0xe044d40b04c0f0e37f55b0300bf902bbc7c531cff159414c8b03fd176ec92425',
