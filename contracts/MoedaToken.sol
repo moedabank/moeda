@@ -108,8 +108,8 @@ contract MoedaToken is StandardToken, Ownable {
   /// @param amount the number of tokens to create
   function create(address recipient, uint256 amount)
   onlyOwner onlyDuringSale {
-      if (amount == 0) throw;
-      if (totalSupply.add(amount) > MAX_TOKENS) throw;
+      require(amount > 0);
+      require(totalSupply.add(amount) <= MAX_TOKENS);
 
       balances[recipient] = balances[recipient].add(amount);
       totalSupply = totalSupply.add(amount);
