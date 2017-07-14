@@ -355,6 +355,14 @@ contract('Crowdsale', (accounts) => {
   });
 
   describe('donate()', () => {
+    it('should throw if sender is team wallet', async () => {
+      const instance = await initStartedSale(accounts[3]);
+      utils.shouldThrowVmException(
+        instance.donate.bind(
+          instance, accounts[1], { from: accounts[3], value: web3.toWei(3)})
+      );
+    });
+
     it('should throw if sale has ended', async () => {
       const instance = await initEndedSale(TEST_WALLET);
       utils.shouldThrowVmException(

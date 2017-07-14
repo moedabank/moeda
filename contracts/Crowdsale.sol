@@ -215,6 +215,7 @@ contract Crowdsale is Ownable {
   function donate(address recipient)
   payable onlyDuringSale notPaused notIssuer {
     require(msg.value >= DUST_LIMIT);
+    require(msg.sender != wallet);
     var (tokenAmount, available) = getAvailable(
       PUBLIC_CAP, publicIssued(), msg.value);
     processDonation(recipient, available, tokenAmount);
