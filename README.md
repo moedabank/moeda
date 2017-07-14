@@ -9,3 +9,7 @@ npm test
 ```
 
 Note that just running `truffle test` with testrpc normally will not work, because the default balances of the accounts testrpc generates are too low for some of the tests.
+
+### Known issues
+
+* the test suite sometimes crashes due to a bug in testrpc.
