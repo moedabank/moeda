@@ -22,7 +22,7 @@
   "devDependencies": {
     "chai": "4.1.0",
     "ethereumjs-testrpc": "4.0.1",
-    "truffle": "3.2.5",
+    "truffle-core": "3.4.4",
     "web3": "0.19.1"
   }
 }

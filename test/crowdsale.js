@@ -479,21 +479,21 @@ contract('Crowdsale', (accounts) => {
     });
 
     it('should finalise sale prematurely if remaining < than dust limit',
-      async () => {
-        const instance = await initStartedSale(TEST_WALLET);
-        const publicCap = await instance.PUBLIC_CAP.call();
-        const dustLimit = await instance.DUST_LIMIT.call();
-        const rate = await instance.tokensPerEth.call();
-        const multiplier = await instance.TOKEN_MULTIPLIER.call();
-        const tokenAmount = publicCap.minus(dustLimit.minus(1));
-        const ethAmount = tokenAmount.mul(rate).div(multiplier).floor();
-        await instance.sendTransaction({ from: accounts[3], value: ethAmount });
+    async () => {
+      const instance = await initStartedSale(TEST_WALLET);
+      const publicCap = await instance.PUBLIC_CAP.call();
+      const dustLimit = await instance.DUST_LIMIT.call();
+      const rate = await instance.tokensPerEth.call();
+      const multiplier = await instance.TOKEN_MULTIPLIER.call();
+      const tokenAmount = publicCap.minus(dustLimit.minus(1));
+      const ethAmount = tokenAmount.mul(multiplier).div(rate).floor();
 
-        await instance.finalise();
+      await instance.sendTransaction({ from: accounts[3], value: ethAmount });
+      await instance.finalise();
 
-        const finalised = await instance.finalised.call();
-        assert.isTrue(finalised);
-      });
+      const finalised = await instance.finalised.call();
+      assert.isTrue(finalised);
+    });
 
     it('should assign presale tokens to presale wallet', async () => {
       const instance = await initEndedSale(TEST_WALLET);
@@ -538,23 +538,22 @@ async function fastForwardToBlock(instance, blockAttributeName) {
 
 async function initUnstartedSale(walletAddress, _centsPerEth = centsPerEth) {
   const blockNumber = web3.eth.blockNumber;
+  const startBlock = blockNumber + 3;
   const instance = await Crowdsale.new(
-    walletAddress, blockNumber + 5, blockNumber + 10, _centsPerEth);
-  const startBlock = await instance.startBlock.call();
-  assert.isBelow(
-    blockNumber,
-    startBlock.toNumber(),
-    'sale should not have been started');
+    walletAddress, startBlock, startBlock + 8, _centsPerEth);
+  assert.isBelow(blockNumber, startBlock, 'sale should not have been started');
 
   return instance;
 }
 
 async function initStartedSale(walletAddress) {
-  const instance = await initUnstartedSale(walletAddress);
-  await fastForwardToBlock(instance, 'startBlock');
+  const blockNumber = web3.eth.blockNumber;
+  const startBlock = blockNumber + 2;
+  const endBlock = blockNumber + 10;
+  const instance = await Crowdsale.new(
+    walletAddress, startBlock, endBlock, centsPerEth);
+  await utils.mineUntilBlock(web3, startBlock);
   const currentBlock = web3.eth.blockNumber;
-  const endBlock = await instance.endBlock.call();
-  const startBlock = await instance.startBlock.call();
   assert.isAtLeast(
     currentBlock, startBlock, 'sale should have been started');
   assert.isBelow(

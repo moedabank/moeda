@@ -1,10 +1,10 @@
 const Config = require("truffle-config");
-const Command = require("truffle/lib/command");
-const TaskError = require("truffle/lib/errors/taskerror");
+const Command = require("truffle-core/lib/command");
+const TaskError = require("truffle-core/lib/errors/taskerror");
 const TruffleError = require("truffle-error");
 const Resolver = require("truffle-resolver");
 const fork = require('child_process').fork;
-const command = new Command(require("truffle/lib/commands"));
+const command = new Command(require("truffle-core/lib/commands"));
 
 const options = {
     logger: console

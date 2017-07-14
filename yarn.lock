@@ -1253,12 +1253,6 @@ base-x@^2.0.1:
   version "2.0.5"
   resolved "https://registry.yarnpkg.com/base-x/-/base-x-2.0.5.tgz#11967f90b42995cfdb5f50a1be499d7675db4fce"
 
-base-x@^3.0.2:
-  version "3.0.2"
-  resolved "https://registry.yarnpkg.com/base-x/-/base-x-3.0.2.tgz#bf873861b7514279b7969f340929eab87c11d130"
-  dependencies:
-    safe-buffer "^5.0.1"
-
 base32.js@^0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/base32.js/-/base32.js-0.1.0.tgz#b582dec693c2f11e893cf064ee6ac5b6131a2202"
@@ -1538,12 +1532,6 @@ bs58@^4.0.0:
   resolved "https://registry.yarnpkg.com/bs58/-/bs58-4.0.0.tgz#65f5deaf6d74e6135a99f763ca6209ab424b9172"
   dependencies:
     base-x "^2.0.1"
-
-bs58@^4.0.1:
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/bs58/-/bs58-4.0.1.tgz#be161e76c354f6f788ae4071f63f34e8c4f0a42a"
-  dependencies:
-    base-x "^3.0.2"
 
 buffer-crc32@^0.2.1, buffer-crc32@~0.2.3:
   version "0.2.13"
@@ -3325,16 +3313,16 @@ ethpm-spec@^1.0.1:
   dependencies:
     json-schema-to-markdown "^1.0.3"
 
-ethpm@0.0.13:
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/ethpm/-/ethpm-0.0.13.tgz#33b714e4db6c8e76a254167aa2feecda28262a63"
+ethpm@0.0.14:
+  version "0.0.14"
+  resolved "https://registry.yarnpkg.com/ethpm/-/ethpm-0.0.14.tgz#3554e247244a99bcf852ec2e22dc5a84eff98190"
   dependencies:
     async "^2.1.2"
     ethpm-spec "^1.0.1"
     fs-extra "^1.0.0"
     glob "^7.1.1"
     ipfs "^0.23.1"
-    ipfs-api "^14.0.1"
+    ipfs-mini "^1.1.2"
     jsonschema "^1.1.1"
     lodash "^4.17.1"
     node-dir "^0.1.16"
@@ -3725,6 +3713,14 @@ fs-extra@^2.0.0:
     graceful-fs "^4.1.2"
     jsonfile "^2.1.0"
 
+fs-extra@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-3.0.1.tgz#3794f378c58b342ea7dbbb23095109c4b3b62291"
+  dependencies:
+    graceful-fs "^4.1.2"
+    jsonfile "^3.0.0"
+    universalify "^0.1.0"
+
 fs-readdir-recursive@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs-readdir-recursive/-/fs-readdir-recursive-1.0.0.tgz#8cd1745c8b4f8a29c8caec392476921ba195f560"
@@ -4047,17 +4043,6 @@ glob@^6.0.1:
     inflight "^1.0.4"
     inherits "2"
     minimatch "2 || 3"
-    once "^1.3.0"
-    path-is-absolute "^1.0.0"
-
-glob@^7.1.2:
-  version "7.1.2"
-  resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.2.tgz#c19c9df9a028702d678612384a6552404c636d15"
-  dependencies:
-    fs.realpath "^1.0.0"
-    inflight "^1.0.4"
-    inherits "2"
-    minimatch "^3.0.4"
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
@@ -4831,39 +4816,6 @@ ipfs-api@^13.0.0:
     streamifier "^0.1.1"
     tar-stream "^1.5.2"
 
-ipfs-api@^14.0.1:
-  version "14.0.4"
-  resolved "https://registry.yarnpkg.com/ipfs-api/-/ipfs-api-14.0.4.tgz#ad034a743aec8c7cf58f94320584fa78d48ee53c"
-  dependencies:
-    async "^2.4.1"
-    bs58 "^4.0.1"
-    cids "~0.5.0"
-    concat-stream "^1.6.0"
-    detect-node "^2.0.3"
-    flatmap "0.0.3"
-    glob "^7.1.2"
-    glob-escape "0.0.2"
-    ipfs-block "~0.6.0"
-    ipfs-unixfs "~0.1.12"
-    ipld-dag-pb "~0.11.0"
-    is-ipfs "^0.3.0"
-    isstream "^0.1.2"
-    lru-cache "^4.1.1"
-    multiaddr "^2.3.0"
-    multihashes "~0.4.5"
-    multipart-stream "^2.0.1"
-    ndjson "^1.5.0"
-    once "^1.4.0"
-    peer-id "~0.8.7"
-    peer-info "~0.9.2"
-    promisify-es6 "^1.0.2"
-    pump "^1.0.2"
-    qs "^6.4.0"
-    readable-stream "1.1.14"
-    stream-http "^2.7.2"
-    streamifier "^0.1.1"
-    tar-stream "^1.5.4"
-
 ipfs-bitswap@~0.10.0:
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/ipfs-bitswap/-/ipfs-bitswap-0.10.0.tgz#156b2ca26b34c7b8698fe169efe3ecb41c002aa7"
@@ -4905,6 +4857,12 @@ ipfs-block@^0.6.0, ipfs-block@~0.6.0:
   resolved "https://registry.yarnpkg.com/ipfs-block/-/ipfs-block-0.6.0.tgz#fea4abbc7a08f5e173370434825034b678eeb8d0"
   dependencies:
     cids "^0.4.2"
+
+ipfs-mini@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/ipfs-mini/-/ipfs-mini-1.1.2.tgz#9c0fad3fa00a82c82caed1ae04b3b99ed3b3e95d"
+  dependencies:
+    xmlhttprequest "^1.8.0"
 
 ipfs-multipart@~0.1.0:
   version "0.1.0"
@@ -4959,7 +4917,7 @@ ipfs-unixfs-engine@~0.19.0:
     pull-write "^1.1.2"
     sparse-array "^1.3.1"
 
-ipfs-unixfs@^0.1.11, ipfs-unixfs@~0.1.11, ipfs-unixfs@~0.1.12:
+ipfs-unixfs@^0.1.11, ipfs-unixfs@~0.1.11:
   version "0.1.12"
   resolved "https://registry.yarnpkg.com/ipfs-unixfs/-/ipfs-unixfs-0.1.12.tgz#47f485776fd0861d70e1771fdab8e4eb5ceedc33"
   dependencies:
@@ -5617,6 +5575,12 @@ jsonbird@^2.0.0:
 jsonfile@^2.1.0:
   version "2.4.0"
   resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-2.4.0.tgz#3736a2b428b87bbda0cc83b53fa3d633a35c2ae8"
+  optionalDependencies:
+    graceful-fs "^4.1.6"
+
+jsonfile@^3.0.0:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/jsonfile/-/jsonfile-3.0.1.tgz#a5ecc6f65f53f662c4415c7675a0331d0992ec66"
   optionalDependencies:
     graceful-fs "^4.1.6"
 
@@ -6622,7 +6586,7 @@ lru-cache@2.2.x:
   version "2.2.4"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-2.2.4.tgz#6c658619becf14031d0d0b594b16042ce4dc063d"
 
-lru-cache@^4.0.0, lru-cache@^4.0.2, lru-cache@^4.1.1:
+lru-cache@^4.0.0, lru-cache@^4.0.2:
   version "4.1.1"
   resolved "https://registry.yarnpkg.com/lru-cache/-/lru-cache-4.1.1.tgz#622e32e82488b49279114a4f9ecf45e7cd6bba55"
   dependencies:
@@ -6857,7 +6821,7 @@ minimatch@0.3:
     lru-cache "2"
     sigmund "~1.0.0"
 
-"minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3, minimatch@^3.0.4:
+"minimatch@2 || 3", minimatch@^3.0.0, minimatch@^3.0.2, minimatch@^3.0.3:
   version "3.0.4"
   resolved "https://registry.yarnpkg.com/minimatch/-/minimatch-3.0.4.tgz#5166e286457f03306064be5497e8dbb0c3d32083"
   dependencies:
@@ -7418,6 +7382,10 @@ ordered-read-streams@^0.3.0:
     is-stream "^1.0.1"
     readable-stream "^2.0.1"
 
+original-require@^1.0.0, original-require@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/original-require/-/original-require-1.0.1.tgz#0f130471584cd33511c5ec38c8d59213f9ac5e20"
+
 os-browserify@^0.2.0:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/os-browserify/-/os-browserify-0.2.1.tgz#63fc4ccee5d2d7763d26bbf8601078e6c2e0044f"
@@ -7663,7 +7631,7 @@ peer-book@~0.3.1:
   dependencies:
     bs58 "^4.0.0"
 
-peer-id@^0.8.5, peer-id@^0.8.6, peer-id@~0.8.4, peer-id@~0.8.7:
+peer-id@^0.8.5, peer-id@~0.8.4:
   version "0.8.7"
   resolved "https://registry.yarnpkg.com/peer-id/-/peer-id-0.8.7.tgz#c9bd9d1588d4ccce71752a9049afa9f10176a33d"
   dependencies:
@@ -7679,14 +7647,6 @@ peer-info@~0.8.4:
     lodash.uniqby "^4.7.0"
     multiaddr "^2.2.3"
     peer-id "^0.8.5"
-
-peer-info@~0.9.2:
-  version "0.9.2"
-  resolved "https://registry.yarnpkg.com/peer-info/-/peer-info-0.9.2.tgz#d79b16b17aff527570b6baea91346349e6b2d0bc"
-  dependencies:
-    lodash.uniqby "^4.7.0"
-    multiaddr "^2.3.0"
-    peer-id "^0.8.6"
 
 pegjs@^0.10.0:
   version "0.10.0"
@@ -9253,7 +9213,7 @@ stream-counter@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/stream-counter/-/stream-counter-1.0.0.tgz#91cf2569ce4dc5061febcd7acb26394a5a114751"
 
-stream-http@^2.3.1, stream-http@^2.6.3, stream-http@^2.7.2:
+stream-http@^2.3.1, stream-http@^2.6.3:
   version "2.7.2"
   resolved "https://registry.yarnpkg.com/stream-http/-/stream-http-2.7.2.tgz#40a050ec8dc3b53b33d9909415c02c0bf1abfbad"
   dependencies:
@@ -9469,7 +9429,7 @@ tar-pack@^3.4.0:
     tar "^2.2.1"
     uid-number "^0.0.6"
 
-tar-stream@^1.1.2, tar-stream@^1.5.0, tar-stream@^1.5.2, tar-stream@^1.5.4:
+tar-stream@^1.1.2, tar-stream@^1.5.0, tar-stream@^1.5.2:
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/tar-stream/-/tar-stream-1.5.4.tgz#36549cf04ed1aee9b2a30c0143252238daf94016"
   dependencies:
@@ -9597,7 +9557,7 @@ tiny-lr@^1.0.3:
     object-assign "^4.1.0"
     qs "^6.4.0"
 
-tmp@0.0.31, tmp@0.0.x:
+tmp@0.0.31, tmp@0.0.x, tmp@^0.0.31:
   version "0.0.31"
   resolved "https://registry.yarnpkg.com/tmp/-/tmp-0.0.31.tgz#8f38ab9438e17315e5dbd8b3657e8bfb277ae4a7"
   dependencies:
@@ -9697,9 +9657,18 @@ truffle-blockchain-utils@0.0.1:
   dependencies:
     web3 "^0.18.0"
 
-truffle-compile@~2.0.0:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/truffle-compile/-/truffle-compile-2.0.2.tgz#fa00c125eca4ef1986c628e15b12d1667591da03"
+truffle-box@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/truffle-box/-/truffle-box-1.0.1.tgz#df672fac705d0a38d0d03bfa88c08e7402d605c6"
+  dependencies:
+    fs-extra "^3.0.1"
+    github-download "^0.5.0"
+    tmp "^0.0.31"
+    vcsurl "^0.1.1"
+
+truffle-compile@~2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/truffle-compile/-/truffle-compile-2.0.3.tgz#a62d95898611f14f778de992d4dd5cea643a5df7"
   dependencies:
     async "^2.1.4"
     colors "^1.1.2"
@@ -9721,13 +9690,23 @@ truffle-config@0.0.6:
     truffle-error "0.0.1"
     truffle-provider "0.0.1"
 
-truffle-config@0.0.7, truffle-config@~0.0.7:
+truffle-config@0.0.7:
   version "0.0.7"
   resolved "https://registry.yarnpkg.com/truffle-config/-/truffle-config-0.0.7.tgz#03185bb9ddd88c62a6a306cfdfc495b3c715e7c4"
   dependencies:
     find-up "^2.1.0"
     lodash "^4.17.4"
     require-nocache "^1.0.0"
+    truffle-error "0.0.2"
+    truffle-provider "0.0.1"
+
+truffle-config@~1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/truffle-config/-/truffle-config-1.0.0.tgz#987ed4e1199876282ea1d8d38b102ee055b8cb88"
+  dependencies:
+    find-up "^2.1.0"
+    lodash "^4.17.4"
+    original-require "^1.0.0"
     truffle-error "0.0.2"
     truffle-provider "0.0.1"
 
@@ -9760,6 +9739,48 @@ truffle-contract@^2.0.0, truffle-contract@~2.0.0:
     truffle-blockchain-utils "0.0.1"
     truffle-contract-schema "0.0.5"
     web3 "^0.18.0"
+
+truffle-core@3.4.4:
+  version "3.4.4"
+  resolved "https://registry.yarnpkg.com/truffle-core/-/truffle-core-3.4.4.tgz#d983a4fb734d72868353007e62d9d0cb807869aa"
+  dependencies:
+    async "^1.4.2"
+    chai "^3.3.0"
+    chokidar "^1.4.2"
+    colors "^1.1.2"
+    cpr "^0.4.3"
+    del "^2.2.0"
+    diff "1.4.0"
+    ethpm "0.0.14"
+    ethpm-registry "0.0.9"
+    finalhandler "^0.4.0"
+    fs-extra "^2.0.0"
+    lodash "^4.5.1"
+    mkdirp "^0.5.1"
+    mocha "^3.2.0"
+    node-dir "0.1.16"
+    original-require "^1.0.0"
+    serve-static "^1.10.0"
+    spawn-args "^0.1.0"
+    temp "^0.8.3"
+    truffle-artifactor "~2.1.4"
+    truffle-box "^1.0.1"
+    truffle-compile "~2.0.3"
+    truffle-config "~1.0.0"
+    truffle-contract "~2.0.0"
+    truffle-contract-sources "~0.0.1"
+    truffle-deployer "~1.0.0"
+    truffle-error "~0.0.2"
+    truffle-expect "~0.0.3"
+    truffle-init "~1.0.5"
+    truffle-migrate "~1.1.1"
+    truffle-provider "~0.0.1"
+    truffle-provisioner "~0.1.0"
+    truffle-require "~1.0.2"
+    truffle-resolver "~3.0.0"
+    truffle-solidity-utils "~1.0.0"
+    web3 "^0.18.0"
+    yargs "^6.6.0"
 
 truffle-deployer@0.1.2:
   version "0.1.2"
@@ -9819,10 +9840,19 @@ truffle-provisioner@^0.1.0, truffle-provisioner@~0.1.0:
   version "0.1.0"
   resolved "https://registry.yarnpkg.com/truffle-provisioner/-/truffle-provisioner-0.1.0.tgz#029e5249c1015300738535e04fded931a53c4f62"
 
-truffle-require@1.0.0, truffle-require@~1.0.0:
+truffle-require@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/truffle-require/-/truffle-require-1.0.0.tgz#b17aa5e3c27eb4b3a26ddcf76c55ccb01d62ead9"
   dependencies:
+    truffle-config "0.0.6"
+    truffle-expect "0.0.3"
+    web3 "^0.18.0"
+
+truffle-require@~1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/truffle-require/-/truffle-require-1.0.2.tgz#44468370942f954bd6fe2dc914c18270331bd4ff"
+  dependencies:
+    original-require "^1.0.1"
     truffle-config "0.0.6"
     truffle-expect "0.0.3"
     web3 "^0.18.0"
@@ -9841,46 +9871,6 @@ truffle-solidity-utils@~1.0.0:
   resolved "https://registry.yarnpkg.com/truffle-solidity-utils/-/truffle-solidity-utils-1.0.0.tgz#5320416dcd3702a775e4cca5c5731d465dab30ae"
   dependencies:
     solidity-parser "^0.3.0"
-
-truffle@3.2.5:
-  version "3.2.5"
-  resolved "https://registry.yarnpkg.com/truffle/-/truffle-3.2.5.tgz#f9151e114670eb33d4f4a71d1ea878c06d66ccc5"
-  dependencies:
-    async "^1.4.2"
-    chai "^3.3.0"
-    chokidar "^1.4.2"
-    colors "^1.1.2"
-    cpr "^0.4.3"
-    del "^2.2.0"
-    diff "1.4.0"
-    ethpm "0.0.13"
-    ethpm-registry "0.0.9"
-    finalhandler "^0.4.0"
-    fs-extra "^2.0.0"
-    lodash "^4.5.1"
-    mkdirp "^0.5.1"
-    mocha "^3.2.0"
-    node-dir "0.1.16"
-    serve-static "^1.10.0"
-    spawn-args "^0.1.0"
-    temp "^0.8.3"
-    truffle-artifactor "~2.1.4"
-    truffle-compile "~2.0.0"
-    truffle-config "~0.0.7"
-    truffle-contract "~2.0.0"
-    truffle-contract-sources "~0.0.1"
-    truffle-deployer "~1.0.0"
-    truffle-error "~0.0.2"
-    truffle-expect "~0.0.3"
-    truffle-init "~1.0.5"
-    truffle-migrate "~1.1.1"
-    truffle-provider "~0.0.1"
-    truffle-provisioner "~0.1.0"
-    truffle-require "~1.0.0"
-    truffle-resolver "~3.0.0"
-    truffle-solidity-utils "~1.0.0"
-    web3 "^0.18.0"
-    yargs "^6.6.0"
 
 tryit@^1.0.1:
   version "1.0.3"
@@ -10114,6 +10104,10 @@ unist-util-visit@^1.0.0, unist-util-visit@^1.0.1, unist-util-visit@^1.1.0:
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/unist-util-visit/-/unist-util-visit-1.1.3.tgz#ec268e731b9d277a79a5b5aa0643990e405d600b"
 
+universalify@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.1.0.tgz#9eb1c4651debcc670cc94f1a75762332bb967778"
+
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/unpipe/-/unpipe-1.0.0.tgz#b2bf4ee8514aae6165b4817829d21b2ef49904ec"
@@ -10236,7 +10230,7 @@ varint@^5.0.0, varint@~5.0.0:
   version "5.0.0"
   resolved "https://registry.yarnpkg.com/varint/-/varint-5.0.0.tgz#d826b89f7490732fabc0c0ed693ed475dcb29ebf"
 
-vcsurl@~0.1.0:
+vcsurl@^0.1.1, vcsurl@~0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/vcsurl/-/vcsurl-0.1.1.tgz#5e00a109e7381b55b5d45b892533c8ec35c9320c"
 
@@ -10687,7 +10681,7 @@ xmlhttprequest-ssl@1.5.3:
   version "1.5.3"
   resolved "https://registry.yarnpkg.com/xmlhttprequest-ssl/-/xmlhttprequest-ssl-1.5.3.tgz#185a888c04eca46c3e4070d99f7b49de3528992d"
 
-xmlhttprequest@*:
+xmlhttprequest@*, xmlhttprequest@^1.8.0:
   version "1.8.0"
   resolved "https://registry.yarnpkg.com/xmlhttprequest/-/xmlhttprequest-1.8.0.tgz#67fe075c5c24fef39f9d65f5f7b7fe75171968fc"
 
