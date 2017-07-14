@@ -88,7 +88,7 @@ module.exports = {
           if (error) {
             return reject(error);
           }
-          resolve(result);
+          return resolve(result);
         }));
 
     return events[events.length - 1].args;

@@ -268,7 +268,8 @@ contract('Crowdsale', (accounts) => {
     it('should return given amount if it is within cap', async () => {
       const decimals = await instance.TOKEN_MULTIPLIER.call();
       const tokensPerEth = await instance.tokensPerEth.call();
-      const amount = web3.toBigNumber(web3.toWei(50)).mul(decimals).div(tokensPerEth).floor();
+      const amount = web3.toBigNumber(web3.toWei(50))
+        .mul(decimals).div(tokensPerEth).floor();
       const [tokens, available] = await instance.getAvailable.call(
         web3.toWei(125), web3.toWei(10), amount);
       assert.strictEqual(available.toString(10), amount.toString(10));
@@ -278,8 +279,10 @@ contract('Crowdsale', (accounts) => {
       async () => {
         const decimals = await instance.TOKEN_MULTIPLIER.call();
         const tokensPerEth = await instance.tokensPerEth.call();
-        const amount = web3.toBigNumber(web3.toWei(50)).mul(decimals).div(tokensPerEth).floor();
-        const expectedAmount = web3.toBigNumber(web3.toWei(10)).mul(decimals).div(tokensPerEth).floor();
+        const amount = web3.toBigNumber(web3.toWei(50))
+          .mul(decimals).div(tokensPerEth).floor();
+        const expectedAmount = web3.toBigNumber(web3.toWei(10))
+          .mul(decimals).div(tokensPerEth).floor();
         const [tokens, available] = await instance.getAvailable.call(
           web3.toWei(125), web3.toWei(115), amount);
         assert.strictEqual(available.toString(10), expectedAmount.toString(10));
@@ -295,7 +298,8 @@ contract('Crowdsale', (accounts) => {
         await fastForwardToBlock(instance, 'startBlock');
         await instance.issue(accounts[2], 123);
         await instance.issue(accounts[2], 456);
-        await instance.donate(accounts[3], { value: web3.toWei(15), from: accounts[3] });
+        await instance.donate(
+          accounts[3], { value: web3.toWei(15), from: accounts[3] });
         const issued = await instance.publicIssued.call();
         const tokensIssued = await instance.tokensIssued.call();
         const totalSold = await instance.totalTokensSold.call();
@@ -312,7 +316,8 @@ contract('Crowdsale', (accounts) => {
         instance.issue.bind(instance, accounts[1], 0, { from: accounts[2] }));
     });
 
-    it('should throw if requested token amount would exceed issuer cap', async () => {
+    it('should throw if requested token amount would exceed issuer cap',
+    async () => {
       const instance = await initStartedSale(TEST_WALLET);
       const issuerCap = await instance.ISSUER_CAP.call();
       await instance.addIssuer(accounts[2]);
@@ -325,19 +330,22 @@ contract('Crowdsale', (accounts) => {
       const instance = await initStartedSale(TEST_WALLET);
       instance.addIssuer(accounts[0]);
       await instance.pause();
-      return utils.shouldThrowVmException(instance.issue.bind(instance, accounts[2], 123));
+      return utils.shouldThrowVmException(
+        instance.issue.bind(instance, accounts[2], 123));
     });
 
     it('should throw if sale has been finalised', async () => {
       const instance = await initEndedSale(TEST_WALLET);
       instance.addIssuer(accounts[0]);
       await instance.finalise();
-      return utils.shouldThrowVmException(instance.issue.bind(instance, accounts[2], 123));
+      return utils.shouldThrowVmException(
+        instance.issue.bind(instance, accounts[2], 123));
     });
 
     it('should throw if sender isnt issuer', async () => {
       const instance = await initStartedSale(TEST_WALLET);
-      return utils.shouldThrowVmException(instance.issue.bind(instance, accounts[2], 123));
+      return utils.shouldThrowVmException(
+        instance.issue.bind(instance, accounts[2], 123));
     });
 
     it('should create tokens and update totals', async () => {
@@ -404,7 +412,8 @@ contract('Crowdsale', (accounts) => {
         const totalSupply = await token.totalSupply.call();
         const tokenBalance = await token.balanceOf.call(accounts[3]);
         const ethBalanceAfter = web3.eth.getBalance(accounts[1]);
-        const expectedSpent = web3.toBigNumber(525).mul(multiplier).div(rate).floor(0);
+        const expectedSpent = web3.toBigNumber(525)
+          .mul(multiplier).div(rate).floor();
         const depositEvent = await utils.getLatestEvent(
           Wallet.at(TEST_WALLET), 'Deposit');
 
@@ -424,7 +433,7 @@ contract('Crowdsale', (accounts) => {
       await instance.donate(accounts[2], { value: amount });
 
       const balance = await token.balanceOf(accounts[2]);
-      const expectedBalance = tokensPerEth.mul(amount).div(multiplier);
+      const expectedBalance = tokensPerEth.mul(amount).div(multiplier).floor();
       const walletBalanceAfter = web3.eth.getBalance(TEST_WALLET);
       assert.equals(balance, '39352500000000000000000');
       assert.equals(
@@ -477,7 +486,7 @@ contract('Crowdsale', (accounts) => {
         const rate = await instance.tokensPerEth.call();
         const multiplier = await instance.TOKEN_MULTIPLIER.call();
         const tokenAmount = publicCap.minus(dustLimit.minus(1));
-        const ethAmount = tokenAmount.mul(rate).div(multiplier);
+        const ethAmount = tokenAmount.mul(rate).div(multiplier).floor();
         await instance.sendTransaction({ from: accounts[3], value: ethAmount });
 
         await instance.finalise();
