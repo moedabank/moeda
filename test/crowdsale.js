@@ -268,25 +268,27 @@ contract('Crowdsale', (accounts) => {
     it('should return given amount if it is within cap', async () => {
       const decimals = await instance.TOKEN_MULTIPLIER.call();
       const tokensPerEth = await instance.tokensPerEth.call();
-      const amount = web3.toBigNumber(web3.toWei(50))
-        .mul(decimals).div(tokensPerEth).floor();
-      const [tokens, available] = await instance.getAvailable.call(
-        web3.toWei(125), web3.toWei(10), amount);
-      assert.strictEqual(available.toString(10), amount.toString(10));
+      const publicCap = await instance.PUBLIC_CAP.call();
+      const amount = web3.toBigNumber(web3.toWei(1500));
+      const expectedTokens = amount.mul(tokensPerEth).div(decimals).floor();
+      const [tokens, available] = await instance.getAvailable.call(amount);
+      assert.equals(available, amount);
+      assert.equals(tokens, expectedTokens);
     });
 
-    it('should return a reduced amount if given amount would exceed cap',
-      async () => {
-        const decimals = await instance.TOKEN_MULTIPLIER.call();
-        const tokensPerEth = await instance.tokensPerEth.call();
-        const amount = web3.toBigNumber(web3.toWei(50))
-          .mul(decimals).div(tokensPerEth).floor();
-        const expectedAmount = web3.toBigNumber(web3.toWei(10))
-          .mul(decimals).div(tokensPerEth).floor();
-        const [tokens, available] = await instance.getAvailable.call(
-          web3.toWei(125), web3.toWei(115), amount);
-        assert.strictEqual(available.toString(10), expectedAmount.toString(10));
-      });
+    it('should return reduced amounts if given ETH amount would exceed cap',
+    async () => {
+      const decimals = await instance.TOKEN_MULTIPLIER.call();
+      const tokensPerEth = await instance.tokensPerEth.call();
+      const publicCap = await instance.PUBLIC_CAP.call();
+      const amount = web3.toBigNumber(publicCap)
+        .mul(decimals).div(tokensPerEth).floor().plus(web3.toWei(100));
+      const expectedAmount = web3.toBigNumber(publicCap)
+        .mul(decimals).div(tokensPerEth).floor();
+      const [tokens, available] = await instance.getAvailable.call(amount);
+      assert.equals(available, expectedAmount);
+      assert.equals(tokens, publicCap);
+    });
   });
 
   describe('publicIssued()', () => {

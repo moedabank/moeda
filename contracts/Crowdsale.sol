@@ -163,16 +163,14 @@ contract Crowdsale is Ownable {
 
   /// @dev determine how much can be bought based on current USD value of
   /// donation
-  /// @param cap the maximum tokens that can be sold towards given cap
-  /// @param received the currently received amount in tokens
-  /// @param amount a suggested amount in Ether
-  /// @return tokens to receive and the ether amount to spend
-  function getAvailable(uint256 cap, uint256 received, uint256 amount)
-  constant returns (uint256, uint256) {
+  /// @param amount a suggested amount in Ether to spend
+  /// @return tokens to receive and the ether amount that can be spent
+  function getAvailable(uint256 amount) constant returns (uint256, uint256) {
+    uint256 received = publicIssued();
     uint256 tokenAmount = ethToTokens(amount);
 
-    if (received.add(tokenAmount) > cap) {
-      tokenAmount = cap.sub(received);
+    if (received.add(tokenAmount) > PUBLIC_CAP) {
+      tokenAmount = PUBLIC_CAP.sub(received);
       return (tokenAmount, tokensToEth(tokenAmount));
     }
 
@@ -216,8 +214,7 @@ contract Crowdsale is Ownable {
   payable onlyDuringSale notPaused notIssuer {
     require(msg.value >= DUST_LIMIT);
     require(msg.sender != wallet);
-    var (tokenAmount, available) = getAvailable(
-      PUBLIC_CAP, publicIssued(), msg.value);
+    var (tokenAmount, available) = getAvailable(msg.value);
     processDonation(recipient, available, tokenAmount);
   }
 
