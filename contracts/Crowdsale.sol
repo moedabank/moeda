@@ -134,6 +134,9 @@ contract Crowdsale is Ownable {
     issuers[_address] = true;
   }
 
+  /// @dev Get rate of change between current exchange rate and given rate
+  /// @param rate new exchange rate
+  /// @return rate of change (e.g. 0.5 for a reduction or 1.5 for an increase)
   function getChangeRatio(uint256 rate) internal constant returns (uint256) {
     if (tokensPerEth == 0) {
       return 10**18;
@@ -151,14 +154,17 @@ contract Crowdsale is Ownable {
   function updateRate(uint256 _centsPerEth) onlyOwner {
     require(_centsPerEth > 0);
 
-    // don't allow a change in price larger than 50% beetween 2 updates
-    // ETH/USD is stupidly volatile, but usually not THAT volatile
+    // Don't allow a change in price larger than 50% in an update
+    // ETH/USD is stupidly volatile, but usually not THAT volatile.
+    // The assumption here is that we'll be updating the rate regularly starting
+    // directly after deployment of the contract, otherwise this could fail on
+    // the first update!
     uint256 newRate = _centsPerEth.mul(10**16);
     uint256 changeRatio = getChangeRatio(newRate);
     require(changeRatio >= 500 finney && changeRatio <= 1500 finney);
 
     tokensPerEth = newRate;
-    LogRateUpdate(_centsPerEth, tokensPerEth);
+    LogRateUpdate(_centsPerEth, newRate);
   }
 
   /// @dev determine how much can be bought based on current USD value of
