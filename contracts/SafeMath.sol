@@ -2,6 +2,7 @@ pragma solidity ^0.4.11;
 
 
 /**
+ * Copyright (c) 2016 Smart Contract Solutions, Inc.
  * @title SafeMath
  * @dev Math operations with safety checks that throw on error
  */
