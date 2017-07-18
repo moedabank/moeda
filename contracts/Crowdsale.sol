@@ -266,6 +266,13 @@ contract Crowdsale is Ownable {
     return amount.mul(tokensPerEth).div(TOKEN_MULTIPLIER);
   }
 
+  /// @dev determine if all tokens have been sold
+  /// @return whether tokens are sold out
+  function isSoldOut() constant returns (bool) {
+    // safemath doesn't make sense here
+    return PUBLIC_CAP + ISSUER_CAP == totalTokensSold;
+  }
+
   /// @dev finalise the crowdsale manually and unlock token transfers
   /// this will only be successful if:
   /// 1. Not already finalised, or
@@ -276,9 +283,8 @@ contract Crowdsale is Ownable {
     require(block.number > startBlock);
     require(!finalised);
 
-    // if amount remaining is too small we can allow sale to end earlier
-    uint256 amountRemaining = tokensToEth(PUBLIC_CAP.sub(publicIssued()));
-    require(block.number > endBlock || amountRemaining < DUST_LIMIT);
+    // If all tokens have been sold before the endBlock we can allow it to end
+    require(block.number > endBlock || isSoldOut());
 
     // create and assign presale and advisor token allocations
     moedaToken.create(PRESALE_WALLET, PRESALE_TOKEN_ALLOCATION);

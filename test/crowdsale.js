@@ -459,6 +459,48 @@ contract('Crowdsale', (accounts) => {
     });
   });
 
+  describe('isSoldOut()', () => {
+    let instance;
+    beforeEach(async () => {
+      instance = await initStartedSale(TEST_WALLET);
+    });
+
+    it('should return true if both ISSUER and PUBLIC caps have been reached',
+    async () => {
+      const publicCap = await instance.PUBLIC_CAP.call();
+      const issuerCap = await instance.ISSUER_CAP.call();
+      const tokensPerEth = await instance.tokensPerEth.call();
+      const amount = publicCap.mul(10**18)
+        .div(tokensPerEth).plus(web3.toWei(1)).floor();
+      await instance.addIssuer(accounts[1]);
+      await instance.issue(accounts[1], issuerCap, { from: accounts[1] });
+      await instance.donate(accounts[2], { value: amount });
+
+      const result = await instance.isSoldOut.call();
+      assert.isTrue(result);
+    });
+
+    it('should return false if only issuer cap has been reached', async () => {
+      const issuerCap = await instance.ISSUER_CAP.call();
+      await instance.addIssuer(accounts[1]);
+      await instance.issue(accounts[1], issuerCap, { from: accounts[1] });
+
+      const result = await instance.isSoldOut.call();
+      assert.isFalse(result);
+    });
+
+    it('should return false if only public cap has been reached', async () => {
+      const publicCap = await instance.PUBLIC_CAP.call();
+      const tokensPerEth = await instance.tokensPerEth.call();
+      const amount = publicCap.mul(10**18)
+        .div(tokensPerEth).plus(web3.toWei(1)).floor();
+      await instance.donate(accounts[2], { value: amount });
+
+      const result = await instance.isSoldOut.call();
+      assert.isFalse(result);
+    });
+  });
+
   describe('finalise()', () => {
     it('should throw when sale has not started',
       async () => {
@@ -488,20 +530,22 @@ contract('Crowdsale', (accounts) => {
       return utils.shouldThrowVmException(instance.finalise.bind(instance));
     });
 
-    it('should finalise sale prematurely if remaining < than dust limit',
+    it('should finalise sale prematurely if all tokens have been sold',
     async () => {
       const instance = await initStartedSale(TEST_WALLET);
       const publicCap = await instance.PUBLIC_CAP.call();
-      const dustLimit = await instance.DUST_LIMIT.call();
-      const rate = await instance.tokensPerEth.call();
-      const multiplier = await instance.TOKEN_MULTIPLIER.call();
-      const tokenAmount = publicCap.minus(dustLimit.minus(1));
-      const ethAmount = tokenAmount.mul(multiplier).div(rate).floor();
-
-      await instance.sendTransaction({ from: accounts[3], value: ethAmount });
+      const issuerCap = await instance.ISSUER_CAP.call();
+      const tokensPerEth = await instance.tokensPerEth.call();
+      const endBlock = await instance.endBlock.call();
+      const amount = publicCap.mul(10**18)
+        .div(tokensPerEth).plus(web3.toWei(1)).floor();
+      await instance.addIssuer(accounts[1]);
+      await instance.issue(accounts[1], issuerCap, { from: accounts[1] });
+      await instance.donate(accounts[2], { value: amount });
       await instance.finalise();
 
       const finalised = await instance.finalised.call();
+      assert.isBelow(web3.eth.blockNumber, endBlock);
       assert.isTrue(finalised);
     });
 
