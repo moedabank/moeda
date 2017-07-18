@@ -191,11 +191,11 @@ contract Crowdsale is Ownable {
     moedaToken.transferOwnership(_newOwner);
   }
 
-  /// @dev issue tokens (e.g. for fiat donations)
+  /// @dev issue tokens (e.g. for Bitcoin Suisse)
   /// @param recipient address that receives tokens
   /// @param amount number of tokens to be issued
   /// Note: this can still be called after the public sale has ended as we want
-  /// to allow bitcoin suisse ample time to finish their allocations
+  /// to allow Bitcoin Suisse ample time to finish their allocations
   function issue(address recipient, uint256 amount)
   notFinalised onlyIssuer notPaused {
     require(amount > 0);
@@ -214,7 +214,7 @@ contract Crowdsale is Ownable {
     return totalTokensSold.sub(tokensIssued);
   }
 
-  /// @dev issue tokens in return for received ether
+  /// @dev issue tokens in return for received ether (public sale)
   /// @param recipient address that receives tokens
   // Usable directly in order to allow someone to donate and issue tokens
   // to a specified address
@@ -268,8 +268,7 @@ contract Crowdsale is Ownable {
     return amount.mul(tokensPerEth).div(TOKEN_MULTIPLIER);
   }
 
-  /// @dev determine if all tokens have been sold
-  /// @return whether tokens are sold out
+  /// @return whether all available tokens have been sold
   function isSoldOut() constant returns (bool) {
     // safemath doesn't make sense here
     return PUBLIC_CAP + ISSUER_CAP == totalTokensSold;
@@ -288,7 +287,7 @@ contract Crowdsale is Ownable {
     // If all tokens have been sold before the endBlock we can allow it to end
     require(block.number > endBlock || isSoldOut());
 
-    // create and assign presale and advisor token allocations
+    // create and assign presale allocation
     moedaToken.create(PRESALE_WALLET, PRESALE_TOKEN_ALLOCATION);
 
     // unlock tokens for spending

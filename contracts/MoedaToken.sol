@@ -100,14 +100,14 @@ contract MoedaToken is StandardToken, Ownable {
 
   /// @dev unlock transfers
   function unlock() onlyOwner {
-      saleActive = false;
+    require(saleActive);
+    saleActive = false;
   }
 
   /// @dev create tokens, only usable while saleActive
   /// @param recipient address that will receive the created tokens
   /// @param amount the number of tokens to create
-  function create(address recipient, uint256 amount)
-  onlyOwner onlyDuringSale {
+  function create(address recipient, uint256 amount) onlyOwner onlyDuringSale {
       require(amount > 0);
       require(totalSupply.add(amount) <= MAX_TOKENS);
 
