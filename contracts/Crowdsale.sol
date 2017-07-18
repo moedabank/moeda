@@ -194,6 +194,8 @@ contract Crowdsale is Ownable {
   /// @dev issue tokens (e.g. for fiat donations)
   /// @param recipient address that receives tokens
   /// @param amount number of tokens to be issued
+  /// Note: this can still be called after the public sale has ended as we want
+  /// to allow bitcoin suisse ample time to finish their allocations
   function issue(address recipient, uint256 amount)
   notFinalised onlyIssuer notPaused {
     require(amount > 0);
