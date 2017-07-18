@@ -14,7 +14,7 @@ const PatchedAssert = {
     if (isBigNumber(valueToCheck) || isBigNumber(valueToBeAbove)) {
       const bnValue = web3.toBigNumber(valueToCheck);
       return assert.isTrue(
-        bnValue.lt(valueToBeAbove),
+        bnValue.gt(valueToBeAbove),
         `${bnValue.toString('10')} should have been above ${valueToBeAbove.toString('10')}`);
     }
 
@@ -51,6 +51,26 @@ const PatchedAssert = {
   },
 }
 
+async function getAllEvents(instance, eventName) {
+  const watcher = instance[eventName]();
+  const events = await new Promise(
+    (resolve, reject) => watcher.get(
+      (error, result) => {
+        watcher.stopWatching();
+        if (error) {
+          return reject(error);
+        }
+        return resolve(result);
+      }));
+
+  return events.map(event => event.args);
+}
+
+async function getLatestEvent(instance, eventName) {
+  const events = await getAllEvents(instance, eventName);
+  return events[events.length - 1];
+}
+
 module.exports = {
   assert: Object.assign({}, assert, PatchedAssert),
   fail(message) {
@@ -79,20 +99,8 @@ module.exports = {
       await mineBlock(web3);
     }
   },
-  async getLatestEvent(instance, eventName) {
-    const watcher = instance[eventName]();
-    const events = await new Promise(
-      (resolve, reject) => watcher.get(
-        (error, result) => {
-          watcher.stopWatching();
-          if (error) {
-            return reject(error);
-          }
-          return resolve(result);
-        }));
-
-    return events[events.length - 1].args;
-  },
+  getLatestEvent,
+  getAllEvents,
   mineBlock,
 };
 
