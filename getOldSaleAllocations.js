@@ -6,7 +6,7 @@ var abi = require('./oldAbi.json');
 const address = '0x4870E705a3def9DDa6da7A953D1cd3CCEDD08573';
 const instance = web3.eth.contract(abi).at(address);
 const publicSaleMax = web3.toBigNumber(web3.toWei(5000000));
-const cutoffBlock = 4003241;
+const cutoffBlock = 4034787;
 const tokensPerEth = 470; // TODO: set actual rate
 const bittrexAddress = '0xfbb1b73c4f0bda4f67dca266ce6ef42f520fbb98';
 
