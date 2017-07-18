@@ -626,3 +626,7 @@ async function initEndedSale(walletAddress) {
   assert.isAtLeast(currentBlock, endBlock, 'sale should have ended');
   return instance;
 }
+
+module.exports = {
+  initStartedSale,
+};
