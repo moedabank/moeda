@@ -17,3 +17,7 @@ Note that just running `truffle test` with testrpc normally will not work, becau
 ### ETH/USD
 
 The ETH/USD rate in the contract will be updated during the sale via a script: https://github.com/erkmos/moeda-usd
+
+### Security Audits
+
+OpenZeppelin - pending
