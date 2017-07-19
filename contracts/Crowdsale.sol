@@ -1,12 +1,13 @@
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'zeppelin-solidity/contracts/token/ERC20Basic.sol';
+import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 import './MoedaToken.sol';
 
 pragma solidity ^0.4.11;
 
 /// @title Moeda crowdsale
-contract Crowdsale is Ownable {
+contract Crowdsale is Ownable, Pausable {
   using SafeMath for uint256;
   bool public finalised;          // Whether the crowdsale has been finalised
                                   // manually. Gives us an ability to verify
@@ -55,22 +56,7 @@ contract Crowdsale is Ownable {
   // Log transfer of tokens that were sent to this contract by mistake
   event LogTokenDrain(address token, address to, uint256 amount);
 
-  // Whether sale has been paused
-  bool public isPaused = false;
-
-  event LogPause();
-  event LogUnpause();
   event LogFinalisation();
-
-  modifier notPaused() {
-    require(!isPaused);
-    _;
-  }
-
-  modifier paused() {
-    require(isPaused);
-    _;
-  }
 
   modifier notFinalised() {
     require(!finalised);
@@ -186,7 +172,7 @@ contract Crowdsale is Ownable {
   /// @dev transfer ownership to a new crowdsale address, would only be used in
   /// the event of a catastrophic bug in this contract
   /// @param _newOwner address that gets ownership of the token
-  function transferTokenOwnership(address _newOwner) onlyOwner paused {
+  function transferTokenOwnership(address _newOwner) onlyOwner whenPaused {
     require(_newOwner != address(0));
     moedaToken.transferOwnership(_newOwner);
   }
@@ -197,7 +183,7 @@ contract Crowdsale is Ownable {
   /// Note: this can still be called after the public sale has ended as we want
   /// to allow Bitcoin Suisse ample time to finish their allocations
   function issue(address recipient, uint256 amount)
-  notFinalised onlyIssuer notPaused {
+  notFinalised onlyIssuer whenNotPaused {
     require(amount > 0);
     uint256 newTotal = tokensIssued.add(amount);
     require(newTotal <= ISSUER_CAP);
@@ -219,7 +205,7 @@ contract Crowdsale is Ownable {
   // Usable directly in order to allow someone to donate and issue tokens
   // to a specified address
   function donate(address recipient)
-  payable onlyDuringSale notPaused notIssuer {
+  payable onlyDuringSale whenNotPaused notIssuer {
     require(msg.value >= DUST_LIMIT);
     require(msg.sender != wallet);
     var (tokenAmount, available) = getAvailable(msg.value);
@@ -230,7 +216,9 @@ contract Crowdsale is Ownable {
   /// @param recipient an address that will receive tokens
   /// @param amount the amount (in Ether) to spend
   /// @param tokenAmount the number of tokens to issue
-  function processDonation(address recipient, uint256 amount, uint256 tokenAmount) internal {
+  function processDonation(
+    address recipient, uint256 amount, uint256 tokenAmount
+  ) internal {
     require(recipient != address(0));
     require(amount > 0 && amount <= msg.value);
 
@@ -280,7 +268,7 @@ contract Crowdsale is Ownable {
   /// 2. endBlock has been reached, or
   /// 3. the cap has been reached, or
   /// 4. the remaining amount to be sold in Ether is below the dust limit
-  function finalise() onlyOwner notPaused {
+  function finalise() onlyOwner whenNotPaused {
     require(block.number > startBlock);
     require(!finalised);
 
@@ -308,18 +296,5 @@ contract Crowdsale is Ownable {
     uint256 balance = token.balanceOf(this);
     token.transfer(_to, balance);
     LogTokenDrain(_token, _to, balance);
-  }
-
-  /// @dev Stop in the event of an emergency
-  function pause() onlyOwner onlyDuringSale notPaused {
-    isPaused = true;
-    LogPause();
-  }
-
-  /// @dev Restart after it has been paused
-  function unpause() onlyOwner onlyDuringSale {
-    require(isPaused);
-    isPaused = false;
-    LogUnpause();
   }
 }
