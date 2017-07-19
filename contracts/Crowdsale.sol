@@ -48,14 +48,9 @@ contract Crowdsale is Ownable, Pausable {
 
   // Log an update of the ETH/USD conversion rate in cents
   event LogRateUpdate(uint256 centsPerEth, uint256 tokensPerEth);
-
-  // Log a donation
   event LogDonation(address indexed donor, uint256 amount, uint256 tokens);
   event LogIssuance(address indexed issuer, address recipient, uint256 amount);
-
-  // Log transfer of tokens that were sent to this contract by mistake
   event LogTokenDrain(address token, address to, uint256 amount);
-
   event LogFinalisation();
 
   modifier notFinalised() {
