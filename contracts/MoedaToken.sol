@@ -29,7 +29,7 @@ contract MoedaToken is StandardToken, Ownable {
   event LogCreation(address indexed donor, uint256 tokensReceived);
 
   // Log when tokens are migrated to a new contract
-  event LogMigration(address indexed recipient, uint256 amount);
+  event LogMigration(address indexed spender, address grantee, uint256 amount);
 
   // Log destruction of tokens
   event LogDestruction(address indexed sender, uint256 amount);
@@ -83,9 +83,9 @@ contract MoedaToken is StandardToken, Ownable {
     balances[msg.sender] = balances[msg.sender].sub(amount);
     totalSupply = totalSupply.sub(amount);
     totalMigrated = totalMigrated.add(amount);
-    migrationAgent.migrateTo(msg.sender, amount);
+    migrationAgent.migrateTo(beneficiary, amount);
 
-    LogMigration(msg.sender, amount);
+    LogMigration(msg.sender, beneficiary, amount);
   }
 
   /// @dev destroy a given amount of tokens owned by sender

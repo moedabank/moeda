@@ -141,11 +141,12 @@ contract('MoedaToken', (accounts) => {
       const agentAddress = await instance.migrationAgent.call();
       const agent = MockMigrationAgent.at(agentAddress);
       const amountMigrated = balance - 1;
+      const recipient = accounts[3];
 
-      await instance.migrate(spender, amountMigrated, { from: spender });
+      await instance.migrate(recipient, amountMigrated, { from: spender });
 
       const newBalance = await instance.balanceOf.call(spender);
-      const agentBalance = await agent.balanceOf.call(spender);
+      const agentBalance = await agent.balanceOf.call(recipient);
       const totalSupply = await instance.totalSupply.call();
       const totalMigrated = await instance.totalMigrated.call();
 
@@ -154,7 +155,8 @@ contract('MoedaToken', (accounts) => {
       assert.strictEqual(totalSupply.toNumber(), 1);
       assert.strictEqual(totalMigrated.toNumber(), amountMigrated);
       const log = await utils.getLatestEvent(instance, 'LogMigration');
-      assert.strictEqual(log.recipient, spender);
+      assert.strictEqual(log.spender, spender);
+      assert.strictEqual(log.grantee, recipient);
       assert.strictEqual(log.amount.toNumber(), amountMigrated);
     });
   });
