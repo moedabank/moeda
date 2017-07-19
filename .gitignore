@@ -1,5 +1,4 @@
 build
-installed_contracts
 node_modules
 *.evm
 .node-xmlhttprequest-sync*

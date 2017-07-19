@@ -24,5 +24,8 @@
     "ethereumjs-testrpc": "4.0.1",
     "truffle-core": "3.4.4",
     "web3": "0.19.1"
+  },
+  "dependencies": {
+    "zeppelin-solidity": "^1.2.0"
   }
 }
