@@ -9954,9 +9954,9 @@ truffle-blockchain-utils@0.0.1:
   dependencies:
     web3 "^0.18.0"
 
-truffle-box@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/truffle-box/-/truffle-box-1.0.1.tgz#df672fac705d0a38d0d03bfa88c08e7402d605c6"
+truffle-box@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/truffle-box/-/truffle-box-1.0.2.tgz#1a84c54fb282f5188c9ce630566e86e98581561c"
   dependencies:
     fs-extra "^3.0.1"
     github-download "^0.5.0"
@@ -10037,9 +10037,9 @@ truffle-contract@^2.0.0, truffle-contract@~2.0.0:
     truffle-contract-schema "0.0.5"
     web3 "^0.18.0"
 
-truffle-core@3.4.4:
-  version "3.4.4"
-  resolved "https://registry.yarnpkg.com/truffle-core/-/truffle-core-3.4.4.tgz#d983a4fb734d72868353007e62d9d0cb807869aa"
+truffle-core@3.4.5:
+  version "3.4.5"
+  resolved "https://registry.yarnpkg.com/truffle-core/-/truffle-core-3.4.5.tgz#7a69d656a17c2b45b4fed96c241323581770bf34"
   dependencies:
     async "^1.4.2"
     chai "^3.3.0"
@@ -10061,7 +10061,7 @@ truffle-core@3.4.4:
     spawn-args "^0.1.0"
     temp "^0.8.3"
     truffle-artifactor "~2.1.4"
-    truffle-box "^1.0.1"
+    truffle-box "^1.0.2"
     truffle-compile "~2.0.3"
     truffle-config "~1.0.0"
     truffle-contract "~2.0.0"
@@ -11143,7 +11143,7 @@ yeast@0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/yeast/-/yeast-0.1.2.tgz#008e06d8094320c372dbc2f8ed76a0ca6c8ac419"
 
-zeppelin-solidity@^1.2.0:
+zeppelin-solidity@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/zeppelin-solidity/-/zeppelin-solidity-1.2.0.tgz#3a50c991a4da2f14fd79e66a2eb576407a6fb124"
   dependencies:
