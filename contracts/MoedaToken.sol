@@ -60,13 +60,13 @@ contract MoedaToken is StandardToken, Ownable {
 
   /// @dev transfer adminitrative privileges to a new address
   /// @param _newAdmin address of new administrator
-  function transferAdmin(address _newAdmin) onlyAdmin {
+  function transferAdmin(address _newAdmin) public onlyAdmin {
     admin = _newAdmin;
   }
 
   /// @dev start a migration to a new contract
   /// @param agent address of contract handling migration
-  function setMigrationAgent(address agent) onlyAdmin onlyAfterSale {
+  function setMigrationAgent(address agent) public onlyAdmin onlyAfterSale {
     require(agent != address(0));
     require(migrationAgent == address(0));
     migrationAgent = MigrationAgent(agent);
@@ -74,7 +74,7 @@ contract MoedaToken is StandardToken, Ownable {
 
   /// @dev move a given amount of tokens a new contract (destroying them here)
   /// @param amount the number of tokens to migrate
-  function migrate(address beneficiary, uint256 amount) onlyAfterSale {
+  function migrate(address beneficiary, uint256 amount) public onlyAfterSale {
     require(beneficiary != address(0));
     require(migrationAgent != address(0));
     require(amount > 0);
@@ -90,7 +90,7 @@ contract MoedaToken is StandardToken, Ownable {
 
   /// @dev destroy a given amount of tokens owned by sender
   // anyone that owns tokens can destroy them, reducing the total supply
-  function burn(uint256 amount) {
+  function burn(uint256 amount) public {
     require(amount > 0);
     balances[msg.sender] = balances[msg.sender].sub(amount);
     totalSupply = totalSupply.sub(amount);
@@ -99,7 +99,7 @@ contract MoedaToken is StandardToken, Ownable {
   }
 
   /// @dev unlock transfers
-  function unlock() onlyOwner {
+  function unlock() public onlyOwner {
     require(saleActive);
     saleActive = false;
   }
@@ -107,7 +107,8 @@ contract MoedaToken is StandardToken, Ownable {
   /// @dev create tokens, only usable while saleActive
   /// @param recipient address that will receive the created tokens
   /// @param amount the number of tokens to create
-  function create(address recipient, uint256 amount) onlyOwner onlyDuringSale {
+  function create(address recipient, uint256 amount)
+  public onlyOwner onlyDuringSale {
       require(amount > 0);
       require(totalSupply.add(amount) <= MAX_TOKENS);
 
@@ -119,14 +120,16 @@ contract MoedaToken is StandardToken, Ownable {
 
   // transfer tokens
   // only allowed after sale has ended
-  function transfer(address _to, uint _value) onlyAfterSale returns (bool) {
+  function transfer(address _to, uint _value)
+  public onlyAfterSale returns (bool)
+  {
       return super.transfer(_to, _value);
   }
 
   // transfer tokens
   // only allowed after sale has ended
-  function transferFrom(address from, address to, uint value) onlyAfterSale
-  returns (bool)
+  function transferFrom(address from, address to, uint value)
+  public onlyAfterSale returns (bool)
   {
       return super.transferFrom(from, to, value);
   }

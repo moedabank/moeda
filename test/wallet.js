@@ -1,4 +1,4 @@
-const Wallet = artifacts.require('Wallet');
+const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
 const MoedaToken = artifacts.require('MoedaToken');
 const utils = require('./utils');
 const assert = utils.assert;
@@ -19,7 +19,7 @@ contract('Wallet', (accounts) => {
     const recipient = `000000000000000000000000${accounts[2].slice(2)}`
     const amount = numberPad(75000);
     const calldata = `${methodId}${recipient}${amount}`;
-    await wallet.execute(token.address, 0, calldata);
+    await wallet.submitTransaction(token.address, 0, calldata);
     const balance = await token.balanceOf.call(accounts[2]);
 
     assert.equals(balance, '75000000000000000000000');
@@ -30,7 +30,7 @@ contract('Wallet', (accounts) => {
     const spender = `000000000000000000000000${accounts[2].slice(2)}`;
     const amount = numberPad(75000);
     const calldata = methodId + spender + amount;
-    await wallet.execute(token.address, 0, calldata);
+    await wallet.submitTransaction(token.address, 0, calldata);
     const allowance = await token.allowance.call(wallet.address, accounts[2]);
     assert.equals(allowance, '75000000000000000000000');
 
@@ -45,7 +45,7 @@ contract('Wallet', (accounts) => {
     const methodId = web3.sha3('burn(uint256)').slice(0, 10);
     const amount = numberPad(6350);
     const calldata = methodId + amount;
-    await wallet.execute(token.address, 0, calldata);
+    await wallet.submitTransaction(token.address, 0, calldata);
     const balance = await token.balanceOf(wallet.address);
     assert.equals(balance, '113650000000000000000000');
   });
@@ -61,7 +61,7 @@ contract('Wallet', (accounts) => {
     const allowance = await token.allowance.call(accounts[3], wallet.address);
     assert.equals(allowance, amount);
 
-    await wallet.execute(token.address, 0, calldata);
+    await wallet.submitTransaction(token.address, 0, calldata);
     const balance = await token.balanceOf.call(accounts[1]);
     assert.equals(balance, amount);
   });
