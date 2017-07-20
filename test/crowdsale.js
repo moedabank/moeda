@@ -182,6 +182,9 @@ contract('Crowdsale', (accounts) => {
     it('should add issuer address', async () => {
       await instance.addIssuer(TEST_WALLET);
       assert.isTrue(await instance.issuers.call(TEST_WALLET));
+      const event = await utils.getLatestEvent(instance, 'LogIssuerAdded');
+
+      assert.strictEqual(event.issuer, TEST_WALLET);
     });
   });
 

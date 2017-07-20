@@ -49,6 +49,7 @@ contract Crowdsale is Ownable, Pausable {
   // Log an update of the ETH/USD conversion rate in cents
   event LogRateUpdate(uint256 centsPerEth, uint256 tokensPerEth);
   event LogDonation(address indexed donor, uint256 amount, uint256 tokens);
+  event LogIssuerAdded(address indexed issuer);
   event LogIssuance(address indexed issuer, address recipient, uint256 amount);
   event LogTokenDrain(address token, address to, uint256 amount);
   event LogFinalisation();
@@ -113,6 +114,7 @@ contract Crowdsale is Ownable, Pausable {
   function addIssuer(address _address) external onlyOwner notFinalised {
     require(_address != address(0));
     issuers[_address] = true;
+    LogIssuerAdded(_address);
   }
 
   /// @dev Get rate of change between current exchange rate and given rate
