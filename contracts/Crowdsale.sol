@@ -17,8 +17,9 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   address public wallet;          // recipient of all crowdsale funds
   MoedaToken public moedaToken;   // token that will be sold during sale
   uint256 public etherReceived;   // total ether received (for reference)
-  uint256 public tokensIssued;    // number of tokens created by issuers
   uint256 public totalTokensSold; // total number of tokens sold
+  uint256 public totalTokensIssued; // amount of tokens issued
+  uint256 public totalAllocated;  // amount allocated to issuers
   uint256 public startBlock;      // block where sale starts
   uint256 public endBlock;        // block where sale ends
 
@@ -45,12 +46,13 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   uint256 public constant PUBLIC_CAP =  5000000 * TOKEN_MULTIPLIER;
 
   // Addresses allowed to issue tokens during the sale
-  mapping(address => bool) public issuers;
+  mapping (address => uint256) public allocations;
+  mapping (address => uint256) public tokensIssued;
 
   // Log an update of the ETH/USD conversion rate in cents
   event LogRateUpdate(uint256 centsPerEth, uint256 tokensPerEth);
   event LogDonation(address indexed donor, uint256 amount, uint256 tokens);
-  event LogIssuerAdded(address indexed issuer);
+  event LogIssuerAdded(address indexed issuer, uint256 amount);
   event LogIssuance(address indexed issuer, address recipient, uint256 amount);
   event LogFinalisation();
 
@@ -60,12 +62,12 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   }
 
   modifier onlyIssuer() {
-    require(issuers[msg.sender]);
+    require(allocations[msg.sender] > 0);
     _;
   }
 
   modifier notIssuer() {
-    require(!issuers[msg.sender]);
+    require(allocations[msg.sender] == 0);
     _;
   }
 
@@ -111,10 +113,14 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
 
   /// @dev Add a token issuer (e.g. for fiat sales)
   /// @param _address issuer's adress
-  function addIssuer(address _address) external onlyOwner notFinalised {
+  /// @param allocation amount of tokens issuer can create
+  function addIssuer(address _address, uint256 allocation) external onlyOwner notFinalised {
     require(_address != address(0));
-    issuers[_address] = true;
-    LogIssuerAdded(_address);
+    require(allocation > 0);
+    require(totalAllocated.add(allocation) <= ISSUER_CAP);
+    allocations[_address] = allocation;
+    totalAllocated = totalAllocated.add(allocation);
+    LogIssuerAdded(_address, allocation);
   }
 
   /// @dev Get rate of change between current exchange rate and given rate
@@ -184,11 +190,14 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   function issue(address recipient, uint256 amount)
   external notFinalised onlyIssuer whenNotPaused {
     require(amount > 0);
-    uint256 newTotal = tokensIssued.add(amount);
-    require(newTotal <= ISSUER_CAP);
+    uint256 newTotal = tokensIssued[msg.sender].add(amount);
+    require(newTotal <= allocations[msg.sender]);
 
-    tokensIssued = newTotal;
+    tokensIssued[msg.sender] = newTotal;
     totalTokensSold = totalTokensSold.add(amount);
+    totalTokensIssued = totalTokensIssued.add(amount);
+    require(totalTokensSold <= ISSUER_CAP);
+
     moedaToken.create(recipient, amount);
 
     LogIssuance(msg.sender, recipient, amount);
@@ -196,7 +205,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
 
   /// @dev amount of tokens issued for direct ether donations
   function publicIssued() public constant returns (uint256) {
-    return totalTokensSold.sub(tokensIssued);
+    return totalTokensSold.sub(totalTokensIssued);
   }
 
   /// @dev issue tokens in return for received ether (public sale)

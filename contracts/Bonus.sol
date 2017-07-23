@@ -36,6 +36,7 @@ contract Bonus is Ownable {
   // Init donor array with all ether amounts of donations from old crowdsale
   function initDonors() external onlyOwner {
     require(donorCount() == 0);
+    require(crowdsale != address(0));
     donors.push(Donation(0x55B30722d84ca292E4432f644F183D1986D2B8F9, 100000000000000000));
     donors.push(Donation(0x7AB6C31747049BBe34a19253c0abe5001cCBe8c6, 4900000000000000000));
     donors.push(Donation(0xF851ff5037212C716e91CD474252B86faCa7bb11, 2958098700000000000));
@@ -71,6 +72,8 @@ contract Bonus is Ownable {
     donors.push(Donation(0xE94aE3d286F693A313c7C8A0907c2f425ADb80C9, 84356750000000000));
     donors.push(Donation(0xAc3949c90Aca5e543114b242917426eF78dae650, 74766400000000000));
     donors.push(Donation(0x6541875114bEca413d016fb60B2Aa25e14604d20, 121800000000000000000));
+
+    initBonusRate();
   }
 
   /// @dev convert a given amount of eth to tokens
@@ -89,15 +92,29 @@ contract Bonus is Ownable {
     crowdsale = _sale;
   }
 
-  // Issue tokens to donors, can only be executed successfully once
-  function createBonusTokens() external onlyOwner {
-    require(donorCount() > 0);
-    require(crowdsale != address(0));
-    require(!issuanceDone);
+  function initBonusRate() internal {
+    require(bonusRate == 0); // not already initalized
     ICrowdsale sale = ICrowdsale(crowdsale);
     bonusRate = uint256(sale.tokensPerEth()) * bonusMultiplier;
     assert(bonusRate > 0);
+  }
+
+  function numTokensToCreate() external constant returns (uint256) {
+    uint256 sum = 0;
+    for (uint i = 0; i < donors.length; i++) {
+      sum += ethToTokens(donors[i].amount, bonusRate);
+    }
+
+    return sum;
+  }
+
+  // Issue tokens to donors, can only be executed successfully once
+  function createBonusTokens() external onlyOwner {
+    require(donorCount() > 0 && bonusRate > 0);
+    require(crowdsale != address(0));
+    require(!issuanceDone);
     uint256 numDonors = donorCount();
+    ICrowdsale sale = ICrowdsale(crowdsale);
 
     for (uint i = 0; i < numDonors; i++) {
       Donation storage donation = donors[i];
