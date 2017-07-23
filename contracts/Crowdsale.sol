@@ -1,5 +1,6 @@
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
+import 'zeppelin-solidity/contracts/ownership/HasNoTokens.sol';
 import 'zeppelin-solidity/contracts/token/ERC20Basic.sol';
 import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 import './MoedaToken.sol';
@@ -7,7 +8,7 @@ import './MoedaToken.sol';
 pragma solidity ^0.4.11;
 
 /// @title Moeda crowdsale
-contract Crowdsale is Ownable, Pausable {
+contract Crowdsale is Ownable, Pausable, HasNoTokens {
   using SafeMath for uint256;
   bool public finalised;          // Whether the crowdsale has been finalised
                                   // manually. Gives us an ability to verify
@@ -51,7 +52,6 @@ contract Crowdsale is Ownable, Pausable {
   event LogDonation(address indexed donor, uint256 amount, uint256 tokens);
   event LogIssuerAdded(address indexed issuer);
   event LogIssuance(address indexed issuer, address recipient, uint256 amount);
-  event LogTokenDrain(address token, address to, uint256 amount);
   event LogFinalisation();
 
   modifier notFinalised() {
@@ -281,19 +281,5 @@ contract Crowdsale is Ownable, Pausable {
     moedaToken.unlock();
     finalised = true;
     LogFinalisation();
-  }
-
-  /// @dev Drain tokens that were sent here by mistake
-  /// because people will.
-  /// @param _token address of token to transfer
-  /// @param _to address where tokens will be transferred
-  function drainToken(address _token, address _to) external onlyOwner {
-    require(_token != address(0));
-    require(_to != address(0));
-
-    ERC20 token = ERC20(_token);
-    uint256 balance = token.balanceOf(this);
-    token.transfer(_to, balance);
-    LogTokenDrain(_token, _to, balance);
   }
 }

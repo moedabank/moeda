@@ -16,7 +16,7 @@ contract('Crowdsale', (accounts) => {
     TEST_WALLET = instance.address;
   });
 
-  describe('drainToken', () => {
+  describe('reclaimToken', () => {
     let instance;
     let testToken;
     let tokenAmount;
@@ -31,15 +31,11 @@ contract('Crowdsale', (accounts) => {
 
     it('should transfer given token and log it', async () => {
       const owner = await instance.owner.call();
-      await instance.drainToken(
-        testToken.address, accounts[2], { from: owner });
-      const event = await utils.getLatestEvent(instance, 'LogTokenDrain');
+      await instance.reclaimToken(
+        testToken.address, { from: owner });
       const tokenBalance = await testToken.balanceOf.call(instance.address);
-      const receiverBalance = await testToken.balanceOf.call(accounts[2]);
+      const receiverBalance = await testToken.balanceOf.call(owner);
 
-      assert.strictEqual(event.token, testToken.address);
-      assert.strictEqual(event.to, accounts[2]);
-      assert.strictEqual(event.amount.toString(10), tokenAmount);
       assert.strictEqual(tokenBalance.toString(10), '0');
       assert.strictEqual(receiverBalance.toString(10), tokenAmount);
     });
@@ -48,8 +44,8 @@ contract('Crowdsale', (accounts) => {
       try {
         const owner = await instance.owner.call();
         assert.notStrictEqual(owner, accounts[3]);
-        await instance.drainToken(
-          testToken.address, accounts[3], { from: accounts[3] });
+        await instance.reclaimToken(
+          testToken.address, { from: accounts[3] });
       } catch (error) {
         assertVmException(error);
       }
