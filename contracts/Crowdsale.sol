@@ -156,22 +156,6 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     LogRateUpdate(_centsPerEth, newRate);
   }
 
-  /// @dev determine how much can be bought based on current USD value of
-  /// donation
-  /// @param amount a suggested amount in Ether to spend
-  /// @return tokens to receive and the ether amount that can be spent
-  function getAvailable(uint256 amount)
-  public constant returns (uint256, uint256) {
-    uint256 received = publicIssued();
-    uint256 tokenAmount = ethToTokens(amount);
-
-    if (received.add(tokenAmount) > PUBLIC_CAP) {
-      tokenAmount = PUBLIC_CAP.sub(received);
-      return (tokenAmount, tokensToEth(tokenAmount));
-    }
-
-    return (tokenAmount, amount);
-  }
 
   /// @dev transfer ownership to a new crowdsale address, would only be used in
   /// the event of a catastrophic bug in this contract
@@ -208,47 +192,52 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     return totalTokensSold.sub(totalTokensIssued);
   }
 
-  /// @dev issue tokens in return for received ether (public sale)
-  /// @param recipient address that receives tokens
-  // Usable directly in order to allow someone to donate and issue tokens
-  // to a specified address
-  function donate(address recipient)
-  public payable onlyDuringSale whenNotPaused notIssuer {
-    require(msg.value >= DUST_LIMIT);
-    require(msg.sender != wallet);
-    var (tokenAmount, available) = getAvailable(msg.value);
-    processDonation(recipient, available, tokenAmount);
+  /// @dev determine how much can be bought based on current USD value of
+  /// donation (only used for direct ETH donations)
+  /// @param amount a suggested amount in Ether to spend
+  /// @return tokens to receive and the ether amount that can be spent
+  function getAvailable(uint256 amount)
+  public constant returns (uint256, uint256) {
+    uint256 received = publicIssued();
+    uint256 tokenAmount = ethToTokens(amount);
+
+    if (received.add(tokenAmount) > PUBLIC_CAP) {
+      tokenAmount = PUBLIC_CAP.sub(received);
+      return (tokenAmount, tokensToEth(tokenAmount));
+    }
+
+    return (tokenAmount, amount);
   }
 
   /// @dev process a donation
   /// @param recipient an address that will receive tokens
-  /// @param amount the amount (in Ether) to spend
-  /// @param tokenAmount the number of tokens to issue
-  function processDonation(
-    address recipient, uint256 amount, uint256 tokenAmount
-  ) internal {
+  function donate(address recipient)
+  public payable onlyDuringSale whenNotPaused notIssuer {
+    require(msg.value >= DUST_LIMIT);
+    require(msg.sender != wallet);
     require(recipient != address(0));
-    require(amount > 0 && amount <= msg.value);
+    var (tokenAmount, ethAmount) = getAvailable(msg.value);
+    require(ethAmount > 0 && ethAmount <= msg.value);
 
-    etherReceived = etherReceived.add(amount);
+    etherReceived = etherReceived.add(ethAmount);
     totalTokensSold = totalTokensSold.add(tokenAmount);
     moedaToken.create(recipient, tokenAmount);
 
-    LogDonation(recipient, amount, tokenAmount);
+    LogDonation(recipient, ethAmount, tokenAmount);
 
-    wallet.transfer(amount);
+    wallet.transfer(ethAmount);
 
     // we could not honour the full amount, so the difference is refunded
     // some contracts with high gas fallback functions will fail here due to
     // limited gas
-    if (amount < msg.value) {
-      msg.sender.transfer(msg.value.sub(amount));
+    if (ethAmount < msg.value) {
+      msg.sender.transfer(msg.value.sub(ethAmount));
     }
   }
 
   // Normally donors will use this function to contribute by just sending ether
   // donate() checks conditions, no need to do it here as well
-  function () public payable {
+  function () external payable {
     donate(msg.sender);
   }
 
