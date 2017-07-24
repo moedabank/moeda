@@ -25,13 +25,9 @@ contract MoedaToken is StandardToken, Ownable {
   // transfers are locked during the sale
   bool public saleActive;
 
-  // only emitted during the crowdsale
-  event LogCreation(address indexed donor, uint256 tokensReceived);
-
   // Log when tokens are migrated to a new contract
   event LogMigration(address indexed spender, address grantee, uint256 amount);
-
-  // Log destruction of tokens
+  event LogCreation(address indexed donor, uint256 tokensReceived);
   event LogDestruction(address indexed sender, uint256 amount);
 
   // determine whether transfers can be made
@@ -109,13 +105,13 @@ contract MoedaToken is StandardToken, Ownable {
   /// @param amount the number of tokens to create
   function create(address recipient, uint256 amount)
   external onlyOwner onlyDuringSale {
-      require(amount > 0);
-      require(totalSupply.add(amount) <= MAX_TOKENS);
+    require(amount > 0);
+    require(totalSupply.add(amount) <= MAX_TOKENS);
 
-      balances[recipient] = balances[recipient].add(amount);
-      totalSupply = totalSupply.add(amount);
+    balances[recipient] = balances[recipient].add(amount);
+    totalSupply = totalSupply.add(amount);
 
-      LogCreation(recipient, amount);
+    LogCreation(recipient, amount);
   }
 
   // transfer tokens
@@ -123,7 +119,7 @@ contract MoedaToken is StandardToken, Ownable {
   function transfer(address _to, uint _value)
   public onlyAfterSale returns (bool)
   {
-      return super.transfer(_to, _value);
+    return super.transfer(_to, _value);
   }
 
   // transfer tokens
@@ -131,6 +127,6 @@ contract MoedaToken is StandardToken, Ownable {
   function transferFrom(address from, address to, uint value)
   public onlyAfterSale returns (bool)
   {
-      return super.transferFrom(from, to, value);
+    return super.transferFrom(from, to, value);
   }
 }
