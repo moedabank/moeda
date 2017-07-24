@@ -25,8 +25,9 @@ contract('Crowdsale', (accounts) => {
       instance = await Crowdsale.deployed();
       testToken = await MoedaToken.new(accounts[1]);
       tokenAmount = web3.toWei(150);
-      await testToken.create(instance.address, tokenAmount);
-      await testToken.unlock();
+      await testToken.create(
+        instance.address, tokenAmount, { from: accounts[1] });
+      await testToken.unlock({ from: accounts[1] });
     });
 
     it('should transfer given token and log it', async () => {
@@ -62,8 +63,10 @@ contract('Crowdsale', (accounts) => {
       const tokenAddress = await instance.moedaToken.call();
       const token = MoedaToken.at(tokenAddress);
       const owner = await token.owner.call();
+      const minter = await token.minter.call();
 
-      assert.strictEqual(owner, instance.address);
+      assert.strictEqual(minter, instance.address);
+      assert.strictEqual(owner, accounts[0]);
       assert.notStrictEqual(tokenAddress, NULL_ADDRESS);
     });
 
@@ -236,42 +239,6 @@ contract('Crowdsale', (accounts) => {
       assert.strictEqual(event.centsPerEth.toString(10), '26225');
       assert.strictEqual(
         event.tokensPerEth.toString(10), '262250000000000000000');
-    });
-  });
-
-  describe('transferTokenOwnership()', () => {
-    let instance;
-    beforeEach(async () => {
-      instance = await initStartedSale(TEST_WALLET);
-    });
-
-    describe('when paused', () => {
-      beforeEach(() => instance.pause());
-
-      it('should only allow owner to call', async () => {
-        await utils.shouldThrowVmException(
-          instance.transferTokenOwnership.bind(
-            instance, accounts[2], { from: accounts[1] }));
-      });
-
-
-      it('should throw if new owner is null address', async () => {
-        await utils.shouldThrowVmException(
-          instance.transferTokenOwnership.bind(instance, NULL_ADDRESS));
-      });
-
-      it('should transfer ownership of token to given address', async () => {
-        const tokenAddress = await instance.moedaToken.call();
-        const token = MoedaToken.at(tokenAddress);
-        await instance.transferTokenOwnership(TEST_WALLET);
-        const newOwner = await token.owner.call();
-        assert.strictEqual(newOwner, TEST_WALLET);
-      });
-    });
-
-    it('should throw when crowdsale has not been paused', async () => {
-      await utils.shouldThrowVmException(
-        instance.transferTokenOwnership.bind(instance, accounts[2]));
     });
   });
 

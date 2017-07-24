@@ -1,15 +1,16 @@
 const MoedaToken = artifacts.require('./MoedaToken');
 const MockMigrationAgent = artifacts.require('./MockMigrationAgent');
 const utils = require('./utils');
+const assert = utils.assert;
 const fail = utils.fail;
 const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 contract('MoedaToken', (accounts) => {
   let instance;
-  const ADMIN = accounts[1];
+  const MINTER = accounts[1];
   beforeEach(async () => {
-    instance = await MoedaToken.new(ADMIN);
+    instance = await MoedaToken.new(MINTER);
   });
 
   describe('constructor', () => {
@@ -21,13 +22,12 @@ contract('MoedaToken', (accounts) => {
 
     it('should set owner to senders address', async () => {
       const owner = await instance.owner.call();
-      assert.strictEqual(
-        owner, accounts[0]);
+      assert.strictEqual(owner, accounts[0]);
     });
 
-    it('should set admin', async () => {
-      const admin = await instance.admin.call();
-      assert.strictEqual(admin, ADMIN);
+    it('should set minter', async () => {
+      const minter = await instance.minter.call();
+      assert.strictEqual(minter, MINTER);
     });
   });
 
@@ -36,21 +36,21 @@ contract('MoedaToken', (accounts) => {
 
     beforeEach(async () => {
       agent = await MockMigrationAgent.new();
-      await instance.unlock();
+      await instance.unlock({ from: MINTER });
     });
 
     it('should throw if sale is active', async () => {
-      const instance = await MoedaToken.new(ADMIN);
+      const instance = await MoedaToken.new(MINTER);
 
       try {
-        await instance.setMigrationAgent(agent.address, { from: ADMIN });
+        await instance.setMigrationAgent(agent.address, { from: accounts[0] });
         assert.fail('should have thrown');
       } catch (error) {
         assertVmException(error);
       }
     });
 
-    it('should throw if sender is not admin', async () => {
+    it('should throw if sender is not owner', async () => {
       try {
         await instance.setMigrationAgent(agent.address, { from: accounts[3] });
         assert.fail('should have thrown');
@@ -61,7 +61,7 @@ contract('MoedaToken', (accounts) => {
 
     it('should throw if argument is null address', async () => {
       try {
-        await instance.setMigrationAgent(NULL_ADDRESS, { from: ADMIN });
+        await instance.setMigrationAgent(NULL_ADDRESS);
         assert.fail('should have thrown');
       } catch (error) {
         assertVmException(error);
@@ -69,10 +69,10 @@ contract('MoedaToken', (accounts) => {
     });
 
     it('should throw if migrationAgent is already set', async () => {
-      await instance.setMigrationAgent(agent.address, { from: ADMIN });
+      await instance.setMigrationAgent(agent.address);
 
       try {
-        await instance.setMigrationAgent(NULL_ADDRESS, { from: ADMIN });
+        await instance.setMigrationAgent(NULL_ADDRESS);
         assert.fail('should have thrown');
       } catch (error) {
         assertVmException(error);
@@ -80,7 +80,7 @@ contract('MoedaToken', (accounts) => {
     });
 
     it('should assign migrationAgent attribute', async () => {
-      await instance.setMigrationAgent(agent.address, { from: ADMIN });
+      await instance.setMigrationAgent(agent.address);
       const agentAddress = await instance.migrationAgent.call();
       assert.strictEqual(agentAddress, agent.address);
     });
@@ -91,10 +91,10 @@ contract('MoedaToken', (accounts) => {
     const spender = accounts[2];
 
     beforeEach(async () => {
-      await instance.create(spender, balance);
+      await instance.create(spender, balance, { from: MINTER });
       const agent = await MockMigrationAgent.new();
-      await instance.unlock();
-      await instance.setMigrationAgent(agent.address, { from: ADMIN });
+      await instance.unlock({ from: MINTER });
+      await instance.setMigrationAgent(agent.address);
     });
 
     it('should throw when sale is still active', async () => {
@@ -102,39 +102,25 @@ contract('MoedaToken', (accounts) => {
       const saleActive = await instance.saleActive.call();
       assert.isTrue(saleActive);
 
-      try {
-        await instance.migrate(spender, balance);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(instance.migrate.bind(instance, spender, balance));
     });
 
     it('should throw when beneficiary is null address', async () => {
-      try {
-        await instance.migrate(NULL_ADDRESS, balance);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(
+        instance.migrate.bind(instance, NULL_ADDRESS, balance));
     });
 
     it('should throw when migrationAgent has not been set', async () => {
-      try {
-        await instance.migrate(spender, balance);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      const instance = await MoedaToken.new(spender);
+      const agent = await instance.migrationAgent.call();
+      assert.strictEqual(agent, NULL_ADDRESS);
+      return utils.shouldThrowVmException(
+        instance.migrate.bind(instance, spender, balance));
     });
 
     it('should throw when amount is zero', async () => {
-      try {
-        await instance.migrate(spender, 0);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(
+        instance.migrate.bind(instance, spender, 0));
     });
 
     it('should destroy old tokens and call migration agent', async () => {
@@ -166,8 +152,8 @@ contract('MoedaToken', (accounts) => {
     let balance = 12345;
 
     beforeEach(async () => {
-      instance = await MoedaToken.new(ADMIN);
-      instance.create(accounts[3], balance);
+      instance = await MoedaToken.new(MINTER);
+      instance.create(accounts[3], balance, { from: MINTER });
     });
 
     it('should throw when amount is zero', async () => {
@@ -197,19 +183,18 @@ contract('MoedaToken', (accounts) => {
     it('should throw if newly generated tokens would exceed max supply',
       async () => {
         const maxTokens = await instance.MAX_TOKENS.call();
-        try {
-          await instance.create(
-            accounts[2], maxTokens.plus(1), { from: accounts[0] });
-          fail('should have thrown');
-        } catch (error) {
-          assertVmException(error);
-        }
+        const totalSupply = await instance.totalSupply.call();
+        assert.equals(totalSupply, 0);
+
+        return utils.shouldThrowVmException(
+          instance.create.bind(
+            instance, accounts[2], maxTokens.plus(1), { from: MINTER }));
       });
 
     it('should increase tokenSupply by given amount', async () => {
       const supply = await instance.totalSupply.call();
       await instance.create(
-        accounts[1], web3.toWei(500), { from: accounts[0] });
+        accounts[1], web3.toWei(500), { from: MINTER });
       const newSupply = await instance.totalSupply.call();
       assert.equal(
         newSupply.toString(), supply.plus(web3.toWei(500)).toString());
@@ -219,7 +204,7 @@ contract('MoedaToken', (accounts) => {
       async () => {
         const balance = await instance.balanceOf.call(accounts[2]);
         await instance.create(
-          accounts[2], web3.toWei(500), { from: accounts[0] });
+          accounts[2], web3.toWei(500), { from: MINTER });
         const newBalance = await instance.balanceOf.call(accounts[2]);
 
         assert.equal(
@@ -227,37 +212,27 @@ contract('MoedaToken', (accounts) => {
           balance.plus(web3.toWei(500)).toString());
       });
 
-    it('should only allow owner to call', async () => {
-      try {
-        await instance.create(
-          accounts[1], web3.toWei(500), { from: accounts[1] });
-        fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+    it('should only allow minter to call', async () => {
+      return utils.shouldThrowVmException(
+        instance.create.bind(instance, accounts[1], web3.toWei(500)));
     });
 
     it('should throw an error when sale is not active', async () => {
-      const instance = await MoedaToken.new(accounts[0]);
-      await instance.unlock();
+      const instance = await MoedaToken.new(MINTER);
+      await instance.unlock({ from: MINTER });
       const saleActive = await instance.saleActive.call();
       assert.isFalse(saleActive);
 
-      try {
-        await instance.create(
-          accounts[1], web3.toWei(500), { from: accounts[0] });
-        fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(instance.create.bind(instance,
+        accounts[1], web3.toWei(500), { from: MINTER }));
     });
 
     it('should emit a LogCreation event on success', async () => {
-      const instance = await MoedaToken.new(accounts[0]);
+      const instance = await MoedaToken.new(MINTER);
 
       try {
         await instance.create(
-          accounts[1], web3.toWei(500), { from: accounts[0] });
+          accounts[1], web3.toWei(500), { from: MINTER });
         const event = await utils.getLatestEvent(
           instance, 'LogCreation');
 
@@ -272,20 +247,15 @@ contract('MoedaToken', (accounts) => {
   });
 
   describe('unlock()', () => {
-    it('should only allow owner to invoke', async () => {
-      try {
-        await instance.unlock({ from: accounts[1] });
-        fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+    it('should only allow minter to invoke', async () => {
+      await utils.shouldThrowVmException(instance.unlock.bind(instance));
 
       const saleActive = await instance.saleActive.call();
       assert.strictEqual(saleActive, true);
     });
 
     it('should set saleActive to false', async () => {
-      await instance.unlock({ from: accounts[0] });
+      await instance.unlock({ from: MINTER });
       const saleActive = await instance.saleActive.call();
       assert.strictEqual(saleActive, false, 'should be unlocked');
     });
@@ -293,25 +263,20 @@ contract('MoedaToken', (accounts) => {
 
   describe('transfer()', () => {
     beforeEach(async () => {
-      await instance.create(accounts[1], web3.toWei(1500));
+      await instance.create(accounts[1], web3.toWei(1500), { from: MINTER });
     });
 
     it('should throw when sale is active', async () => {
-      try {
-        const saleActive = await instance.saleActive.call();
-        assert.isTrue(saleActive);
-
-        await instance.transfer(
-          accounts[2], web3.toWei(10), { from: accounts[1] });
-        fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      const saleActive = await instance.saleActive.call();
+      assert.isTrue(saleActive);
+      return utils.shouldThrowVmException(
+        instance.transfer.bind(instance,
+          accounts[2], web3.toWei(10), { from: accounts[1] }));
     });
 
     it('should not throw when transfers are unlocked', async () => {
       try {
-        await instance.unlock();
+        await instance.unlock({ from: MINTER });
         const saleActive = await instance.saleActive.call();
         assert.isFalse(saleActive);
 
@@ -334,33 +299,28 @@ contract('MoedaToken', (accounts) => {
 
   describe('transferFrom()', () => {
     beforeEach(async () => {
-      await instance.create(accounts[1], web3.toWei(1500));
+      await instance.create(accounts[1], web3.toWei(1500), { from: MINTER });
     });
 
     it('should throw when sale is active', async () => {
-      try {
-        const saleActive = await instance.saleActive.call();
-        assert.isTrue(saleActive);
+      const saleActive = await instance.saleActive.call();
+      assert.isTrue(saleActive);
 
-        await instance.approve(
-          accounts[2], web3.toWei(100), { from: accounts[1] });
-        const allowance = await instance.allowance.call(
-          accounts[1], accounts[2]);
-        assert.strictEqual(web3.fromWei(allowance).toNumber(), 100);
+      await instance.approve(
+        accounts[2], web3.toWei(100), { from: accounts[1] });
+      const allowance = await instance.allowance.call(
+        accounts[1], accounts[2]);
+      assert.strictEqual(web3.fromWei(allowance).toNumber(), 100);
 
-        await instance.transferFrom(
+      return utils.shouldThrowVmException(
+        instance.transferFrom.bind(instance,
           accounts[1], accounts[2], web3.toWei(50),
-          { from: accounts[2] });
-
-        fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+          { from: accounts[2] }));
     });
 
     it('should not throw when transfers are unlocked', async () => {
       try {
-        await instance.unlock();
+        await instance.unlock({ from: MINTER });
         const saleActive = await instance.saleActive.call();
         assert.isFalse(saleActive);
 
@@ -391,7 +351,7 @@ contract('MoedaToken', (accounts) => {
 
   describe('balanceOf()', () => {
     it('should return balance of token holder', async () => {
-      await instance.create(accounts[1], web3.toWei(15));
+      await instance.create(accounts[1], web3.toWei(15), { from: MINTER });
       const balance = await instance.balanceOf.call(accounts[1]);
       assert.strictEqual(balance.toString(), web3.toWei(15).toString());
     });
@@ -418,7 +378,7 @@ contract('MoedaToken', (accounts) => {
       });
 
     it('should emit an approval event', async () => {
-      await instance.create(accounts[1], web3.toWei(15));
+      await instance.create(accounts[1], web3.toWei(15), { from: MINTER });
       const amount = web3.toWei(9);
       await instance.approve(
         accounts[3], amount, { from: accounts[1] });
@@ -431,7 +391,7 @@ contract('MoedaToken', (accounts) => {
 
   describe('allowance()', () => {
     it('should return an allowed transfer amount', async () => {
-      await instance.create(accounts[1], web3.toWei(15));
+      await instance.create(accounts[1], web3.toWei(15), { from: MINTER });
       await instance.approve(
         accounts[2], web3.toWei(8), { from: accounts[1] });
       const allowance = await instance.allowance.call(

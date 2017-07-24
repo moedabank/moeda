@@ -16,8 +16,8 @@ contract MoedaToken is StandardToken, Ownable {
   MigrationAgent public migrationAgent;
   uint256 public totalMigrated;
 
-  // admin can only set a migration agent
-  address public admin;
+  // only address allow to create tokens
+  address public minter;
 
   // don't allow creation of more than this number of tokens
   uint public constant MAX_TOKENS = 20000000 * 10**18;
@@ -36,8 +36,8 @@ contract MoedaToken is StandardToken, Ownable {
     _;
   }
 
-  modifier onlyAdmin() {
-    require(msg.sender == admin);
+  modifier onlyMinter() {
+    require(msg.sender == minter);
     _;
   }
 
@@ -47,22 +47,16 @@ contract MoedaToken is StandardToken, Ownable {
   }
 
   /// @dev Create moeda token and lock transfers
-  /// @param _admin address for administrator of contract
-  function MoedaToken(address _admin) {
-    require(_admin != address(0));
-    admin = _admin;
+  /// @param _minter address for administrator of contract
+  function MoedaToken(address _minter) {
+    require(_minter != address(0));
+    minter = _minter;
     saleActive = true;
-  }
-
-  /// @dev transfer adminitrative privileges to a new address
-  /// @param _newAdmin address of new administrator
-  function transferAdmin(address _newAdmin) external onlyAdmin {
-    admin = _newAdmin;
   }
 
   /// @dev start a migration to a new contract
   /// @param agent address of contract handling migration
-  function setMigrationAgent(address agent) external onlyAdmin onlyAfterSale {
+  function setMigrationAgent(address agent) external onlyOwner onlyAfterSale {
     require(agent != address(0));
     require(migrationAgent == address(0));
     migrationAgent = MigrationAgent(agent);
@@ -95,7 +89,7 @@ contract MoedaToken is StandardToken, Ownable {
   }
 
   /// @dev unlock transfers
-  function unlock() external onlyOwner {
+  function unlock() external onlyMinter {
     require(saleActive);
     saleActive = false;
   }
@@ -104,7 +98,7 @@ contract MoedaToken is StandardToken, Ownable {
   /// @param recipient address that will receive the created tokens
   /// @param amount the number of tokens to create
   function create(address recipient, uint256 amount)
-  external onlyOwner onlyDuringSale {
+  external onlyMinter onlyDuringSale {
     require(amount > 0);
     require(totalSupply.add(amount) <= MAX_TOKENS);
 

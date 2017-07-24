@@ -102,8 +102,9 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     endBlock = _endBlock;
     updateRate(_centsPerEth);
 
-    // create token and set deployer of this contract as admin of token
-    moedaToken = new MoedaToken(msg.sender);
+    // create token and set myself as minter
+    moedaToken = new MoedaToken(this);
+    moedaToken.transferOwnership(msg.sender);
 
     // if there is a balance in this contract on creation, drain it
     if (this.balance > 0) {
@@ -154,16 +155,6 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
 
     tokensPerEth = newRate;
     LogRateUpdate(_centsPerEth, newRate);
-  }
-
-
-  /// @dev transfer ownership to a new crowdsale address, would only be used in
-  /// the event of a catastrophic bug in this contract
-  /// @param _newOwner address that gets ownership of the token
-  function transferTokenOwnership(address _newOwner)
-  external onlyOwner whenPaused {
-    require(_newOwner != address(0));
-    moedaToken.transferOwnership(_newOwner);
   }
 
   /// @dev issue tokens (e.g. for Bitcoin Suisse)
