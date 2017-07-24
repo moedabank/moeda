@@ -1,3 +1,5 @@
+pragma solidity ^0.4.11;
+
 contract MockCrowdsale {
   function tokensPerEth() public returns (uint256) {
     return 1;

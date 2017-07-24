@@ -171,7 +171,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     tokensIssued[msg.sender] = newTotal;
     totalTokensSold = totalTokensSold.add(amount);
     totalTokensIssued = totalTokensIssued.add(amount);
-    require(totalTokensSold <= ISSUER_CAP);
+    require(totalTokensIssued <= ISSUER_CAP);
 
     moedaToken.create(recipient, amount);
 
