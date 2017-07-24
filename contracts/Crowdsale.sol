@@ -263,8 +263,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   /// this will only be successful if:
   /// 1. Not already finalised, or
   /// 2. endBlock has been reached, or
-  /// 3. the cap has been reached, or
-  /// 4. the remaining amount to be sold in Ether is below the dust limit
+  /// 3. the cap has been reached
   function finalise() external onlyOwner whenNotPaused {
     require(block.number > startBlock);
     require(!finalised);
