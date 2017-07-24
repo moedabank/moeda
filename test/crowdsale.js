@@ -562,6 +562,38 @@ contract('Crowdsale', (accounts) => {
         assert.isFalse(saleActive);
       });
   });
+
+  describe('setWallet', () => {
+    let instance;
+    beforeEach(async () => instance = await initUnstartedSale(TEST_WALLET));
+
+    it('should throw if sender is not owner', async () => {
+      await instance.pause();
+      return utils.shouldThrowVmException(
+        instance.setWallet.bind(instance, accounts[1], { from: accounts[1]}));
+    });
+
+    it('should throw if sale has not been paused', async () => {
+      return utils.shouldThrowVmException(
+        instance.setWallet.bind(instance, accounts[1]));
+    });
+
+    it('should throw if new wallet address is null address', async () => {
+      await instance.pause();
+      return utils.shouldThrowVmException(
+        instance.setWallet.bind(instance, NULL_ADDRESS));
+    });
+
+    it('should update wallet address', async () => {
+      await instance.pause();
+      const newWallet = accounts[3];
+      const walletBefore = await instance.wallet.call();
+      await instance.setWallet(newWallet);
+      const walletAfter = await instance.wallet.call();
+      assert.notEqual(walletBefore, walletAfter);
+      assert.strictEqual(newWallet, walletAfter);
+    });
+  });
 });
 
 async function fastForwardToBlock(instance, blockAttributeName) {

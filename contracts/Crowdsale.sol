@@ -270,4 +270,11 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     finalised = true;
     LogFinalisation();
   }
+
+  /// @dev Change wallet when halted (emergency only)
+  /// @param _wallet address of new wallet that will receive funds
+  function setWallet(address _wallet) external whenPaused onlyOwner {
+    require(_wallet != address(0));
+    wallet = _wallet;
+  }
 }
