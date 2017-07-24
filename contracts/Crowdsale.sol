@@ -178,7 +178,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     LogIssuance(msg.sender, recipient, amount);
   }
 
-  /// @dev amount of tokens issued for direct ether donations
+  /// @dev get amount of tokens issued for direct ether donations
   function publicIssued() public constant returns (uint256) {
     return totalTokensSold.sub(totalTokensIssued);
   }
@@ -187,6 +187,8 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   /// donation (only used for direct ETH donations)
   /// @param amount a suggested amount in Ether to spend
   /// @return tokens to receive and the ether amount that can be spent
+  /// note: there is a loss of precision here due to integer division, but the
+  /// difference (if any) will be refunded in donate()
   function getAvailable(uint256 amount)
   public constant returns (uint256, uint256) {
     uint256 received = publicIssued();
@@ -218,7 +220,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
 
     wallet.transfer(ethAmount);
 
-    // we could not honour the full amount, so the difference is refunded
+    // we could not honour the full amount, refund the unspent ether
     // some contracts with high gas fallback functions will fail here due to
     // limited gas
     if (ethAmount < msg.value) {
@@ -259,7 +261,8 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     require(block.number > startBlock);
     require(!finalised);
 
-    // If all tokens have been sold before the endBlock we can allow it to end
+    // If all tokens have been sold before the end block we can allow the sale
+    // to end early
     require(block.number > endBlock || isSoldOut());
 
     // create and assign presale allocation

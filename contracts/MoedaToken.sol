@@ -16,7 +16,7 @@ contract MoedaToken is StandardToken, Ownable {
   MigrationAgent public migrationAgent;
   uint256 public totalMigrated;
 
-  // only address allow to create tokens
+  // only address allowed to create tokens
   address public minter;
 
   // don't allow creation of more than this number of tokens
@@ -30,7 +30,6 @@ contract MoedaToken is StandardToken, Ownable {
   event LogCreation(address indexed donor, uint256 tokensReceived);
   event LogDestruction(address indexed sender, uint256 amount);
 
-  // determine whether transfers can be made
   modifier onlyAfterSale() {
     require(!saleActive);
     _;
@@ -47,7 +46,7 @@ contract MoedaToken is StandardToken, Ownable {
   }
 
   /// @dev Create moeda token and lock transfers
-  /// @param _minter address for administrator of contract
+  /// @param _minter address of the single address allowed to create tokens
   function MoedaToken(address _minter) {
     require(_minter != address(0));
     minter = _minter;
@@ -108,7 +107,6 @@ contract MoedaToken is StandardToken, Ownable {
     LogCreation(recipient, amount);
   }
 
-  // transfer tokens
   // only allowed after sale has ended
   function transfer(address _to, uint _value)
   public onlyAfterSale returns (bool)
@@ -116,7 +114,6 @@ contract MoedaToken is StandardToken, Ownable {
     return super.transfer(_to, _value);
   }
 
-  // transfer tokens
   // only allowed after sale has ended
   function transferFrom(address from, address to, uint value)
   public onlyAfterSale returns (bool)
