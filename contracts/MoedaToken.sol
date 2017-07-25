@@ -87,7 +87,7 @@ contract MoedaToken is StandardToken, Ownable {
     mintingFinished = true;
   }
 
-  /// @dev create tokens, only usable while mintingFinished
+  /// @dev create tokens, only usable before minting has ended
   /// @param recipient address that will receive the created tokens
   /// @param amount the number of tokens to create
   function create(address recipient, uint256 amount) external canMint {
