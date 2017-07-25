@@ -1,0 +1,19 @@
+language: node_js
+dist: trusty
+node_js:
+- '7.10'
+env:
+  matrix:
+  - CXX=g++-4.8
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - g++-4.8
+cache:
+  yarn: true
+script:
+- yarn test
+- yarn lint
+- yarn lint-contracts
