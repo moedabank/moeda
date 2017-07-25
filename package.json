@@ -11,14 +11,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/erkmos/moeda.git"
+    "url": "git+https://github.com/erkmos/moeda-contracts.git"
   },
   "author": "Erik Mossberg",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/erkmos/moeda/issues"
+    "url": "https://github.com/erkmos/moeda-contracts/issues"
   },
-  "homepage": "https://github.com/erkmos/moeda#readme",
+  "homepage": "https://github.com/erkmos/moeda-contracts#readme",
   "devDependencies": {
     "chai": "4.1.0",
     "ethereumjs-testrpc": "4.0.1",
