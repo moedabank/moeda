@@ -1,3 +1,4 @@
+pragma solidity ^0.4.11;
 import 'zeppelin-solidity/contracts/math/SafeMath.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import 'zeppelin-solidity/contracts/ownership/HasNoTokens.sol';
@@ -5,7 +6,6 @@ import 'zeppelin-solidity/contracts/token/ERC20Basic.sol';
 import 'zeppelin-solidity/contracts/lifecycle/Pausable.sol';
 import './MoedaToken.sol';
 
-pragma solidity ^0.4.11;
 
 /// @title Moeda fundraiser
 contract Fundraiser is Ownable, Pausable, HasNoTokens {

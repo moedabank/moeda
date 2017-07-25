@@ -1,6 +1,7 @@
 pragma solidity ^0.4.11;
 import '../Fundraiser.sol';
 
+
 contract TimeTravellingFundraiser is Fundraiser {
   uint256 public currentBlockNumber;
 

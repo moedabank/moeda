@@ -1,11 +1,12 @@
 pragma solidity ^0.4.11;
-
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
+
 
 contract IFundraiser {
     uint256 public tokensPerEth;
     function issue(address recipient, uint256 amount);
 }
+
 
 // Issuance of loyalty bonus for donors that participated in the old fundraiser
 contract Bonus is Ownable {

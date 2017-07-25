@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
-
 import "../MigrationAgent.sol";
+
 
 contract MockMigrationAgent is MigrationAgent {
   mapping (address => uint256) public balances;

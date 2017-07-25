@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "node runTests.js"
+    "test": "node runTests.js",
+    "lint-contracts": "solium --dir contracts"
   },
   "repository": {
     "type": "git",
@@ -26,6 +27,7 @@
     "web3": "0.19.1"
   },
   "dependencies": {
+    "solium": "^0.5.4",
     "zeppelin-solidity": "1.2.0"
   }
 }

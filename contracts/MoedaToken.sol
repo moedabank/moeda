@@ -1,8 +1,8 @@
+pragma solidity ^0.4.11;
 import 'zeppelin-solidity/contracts/token/StandardToken.sol';
 import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
 import './MigrationAgent.sol';
 
-pragma solidity ^0.4.11;
 
 /// @title Moeda Loaylty Points token contract
 contract MoedaToken is StandardToken, Ownable {
