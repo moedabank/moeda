@@ -1,4 +1,4 @@
-const Fundraiser = artifacts.require('Fundraiser');
+const Fundraiser = artifacts.require('TimeTravellingFundraiser');
 const MoedaToken = artifacts.require('./MoedaToken');
 const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
 const utils = require('./utils');
@@ -167,7 +167,8 @@ contract('Fundraiser', (accounts) => {
     });
 
     it('should throw if fundraiser has been finalised', async () => {
-      await fastForwardToBlock(instance, 'endBlock');
+      const endBlock = await instance.endBlock.call();
+      await instance.setBlock(endBlock);
       await instance.finalise();
       await utils.shouldThrowVmException(
         instance.addIssuer.bind(instance, TEST_WALLET, 100));
@@ -275,10 +276,9 @@ contract('Fundraiser', (accounts) => {
   describe('publicIssued()', () => {
     it('should return total issued tokens minus issuer created tokens',
       async () => {
-        const instance = await initUnstartedFundraiser(TEST_WALLET);
+        const instance = await initStartedFundraiser(TEST_WALLET);
         await instance.addIssuer(accounts[0], 1000);
         await instance.addIssuer(accounts[1], 1000);
-        await fastForwardToBlock(instance, 'startBlock');
         await instance.issue(accounts[2], 123);
         await instance.issue(accounts[2], 456);
         await instance.donate(
@@ -507,7 +507,8 @@ contract('Fundraiser', (accounts) => {
     it('should throw if fundraiser has been paused', async () => {
       const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.pause();
-      await fastForwardToBlock(instance, 'endBlock');
+      const endBlock = await instance.endBlock.call();
+      await instance.setBlock(endBlock);
       return utils.shouldThrowVmException(instance.finalise.bind(instance));
     });
 
@@ -517,16 +518,22 @@ contract('Fundraiser', (accounts) => {
       const publicCap = await instance.PUBLIC_CAP.call();
       const issuerCap = await instance.ISSUER_CAP.call();
       const tokensPerEth = await instance.tokensPerEth.call();
-      const endBlock = await instance.endBlock.call();
       const amount = publicCap.mul(10**18)
         .div(tokensPerEth).plus(web3.toWei(1)).floor();
       await instance.addIssuer(accounts[1], issuerCap);
       await instance.issue(accounts[1], issuerCap, { from: accounts[1] });
       await instance.donate(accounts[2], { value: amount });
+      const tokensSold = await instance.totalTokensSold.call();
+      assert.equals(tokensSold, web3.toWei(15000000));
+      
+      // at least one block must have passed since start
+      await instance.incrBlock();
       await instance.finalise();
 
       const finalised = await instance.finalised.call();
-      assert.isBelow(web3.eth.blockNumber, endBlock);
+      const endBlock = await instance.endBlock.call();
+      const blockNumber = await instance.currentBlockNumber.call();
+      assert.isBelow(blockNumber, endBlock);
       assert.isTrue(finalised);
     });
 
@@ -596,44 +603,41 @@ contract('Fundraiser', (accounts) => {
   });
 });
 
-async function fastForwardToBlock(instance, blockAttributeName) {
-  // The starting block is dynamic because we run tests in testrpc
-  const blockNumber = await instance[blockAttributeName].call();
-
-  await utils.mineUntilBlock(web3, blockNumber);
-}
-
 async function initUnstartedFundraiser(walletAddress, _centsPerEth = centsPerEth) {
-  const blockNumber = web3.eth.blockNumber;
-  const startBlock = blockNumber + 3;
+  const startBlock = 2;
+  const endBlock = 10;
   const instance = await Fundraiser.new(
-    walletAddress, startBlock, startBlock + 8, _centsPerEth);
+    walletAddress, startBlock, endBlock, _centsPerEth);
+  const blockNumber = await instance.currentBlockNumber.call();
   assert.isBelow(blockNumber, startBlock, 'fundraiser should not have been started');
 
   return instance;
 }
 
 async function initStartedFundraiser(walletAddress) {
-  const blockNumber = web3.eth.blockNumber;
-  const startBlock = blockNumber + 2;
-  const endBlock = blockNumber + 10;
+  const startBlock = 2;
+  const endBlock = 10;
+
   const instance = await Fundraiser.new(
     walletAddress, startBlock, endBlock, centsPerEth);
-  await utils.mineUntilBlock(web3, startBlock);
-  const currentBlock = web3.eth.blockNumber;
+  await instance.setBlock(startBlock);
+
+  const currentBlock = await instance.currentBlockNumber.call();
   assert.isAtLeast(
     currentBlock, startBlock, 'fundraiser should have been started');
   assert.isBelow(
     currentBlock, endBlock, 'fundraiser should not have ended yet');
+
   return instance;
 }
 
 async function initEndedFundraiser(walletAddress) {
   const instance = await initUnstartedFundraiser(walletAddress);
   const endBlock = await instance.endBlock.call();
-  await fastForwardToBlock(instance, 'endBlock');
-  const currentBlock = web3.eth.blockNumber;
+  await instance.setBlock(endBlock);
+  const currentBlock = await instance.currentBlockNumber.call();
   assert.isAtLeast(currentBlock, endBlock, 'fundraiser should have ended');
+
   return instance;
 }
 

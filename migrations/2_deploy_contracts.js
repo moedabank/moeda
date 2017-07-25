@@ -1,4 +1,4 @@
-const Fundraiser = artifacts.require("./Fundraiser.sol");
+const Fundraiser = artifacts.require("./TimeTravellingFundraiser.sol");
 const MoedaToken = artifacts.require("./MoedaToken.sol");
 
 const TEST_WALLET = '0x98a321f414d67f186e30bdac641e5ecf990397ae';

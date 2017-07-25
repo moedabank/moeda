@@ -72,14 +72,14 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   }
 
   modifier onlyBeforeFundraiser() {
-    require(block.number < startBlock);
+    require(getBlock() < startBlock);
     _;
   }
 
   modifier onlyDuringFundraiser() {
     require(!finalised);
-    require(block.number >= startBlock);
-    require(block.number < endBlock);
+    require(getBlock() >= startBlock);
+    require(getBlock() < endBlock);
     _;
   }
 
@@ -92,7 +92,7 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
     address _wallet, uint _startBlock, uint _endBlock, uint _centsPerEth
   ) {
     require(_wallet != address(0));
-    require(_startBlock > block.number);
+    require(_startBlock > getBlock());
     require(_endBlock > _startBlock);
     require(_centsPerEth > 0);
 
@@ -258,12 +258,12 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   /// 2. endBlock has been reached, or
   /// 3. the cap has been reached
   function finalise() external onlyOwner whenNotPaused {
-    require(block.number > startBlock);
+    require(getBlock() > startBlock);
     require(!finalised);
 
     // If all tokens have been sold before the end block we can allow the fundraiser
     // to end early
-    require(block.number > endBlock || isSoldOut());
+    require(getBlock() >= endBlock || isSoldOut());
 
     // create and assign prefunding allocation
     moedaToken.create(PREFUNDING_WALLET, PREFUNDING_TOKEN_ALLOCATION);
@@ -279,5 +279,10 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   function setWallet(address _wallet) external whenPaused onlyOwner {
     require(_wallet != address(0));
     wallet = _wallet;
+  }
+
+  // This utility function is overloaded with a mock in tests
+  function getBlock() internal constant returns (uint256) {
+    return block.number;
   }
 }
