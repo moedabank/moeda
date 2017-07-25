@@ -14,12 +14,6 @@ contract('MoedaToken', (accounts) => {
   });
 
   describe('constructor', () => {
-    it('should set saleActive to true', async () => {
-      const saleActive = await instance.saleActive.call();
-      assert.strictEqual(
-        saleActive, true, 'should be saleActive');
-    });
-
     it('should set owner to senders address', async () => {
       const owner = await instance.owner.call();
       assert.strictEqual(owner, accounts[0]);
@@ -39,7 +33,7 @@ contract('MoedaToken', (accounts) => {
       await instance.unlock({ from: MINTER });
     });
 
-    it('should throw if sale is active', async () => {
+    it('should throw if fundraiser is active', async () => {
       const instance = await MoedaToken.new(MINTER);
 
       try {
@@ -97,10 +91,10 @@ contract('MoedaToken', (accounts) => {
       await instance.setMigrationAgent(agent.address);
     });
 
-    it('should throw when sale is still active', async () => {
+    it('should throw when fundraiser is still active', async () => {
       const instance = await MoedaToken.new(spender);
-      const saleActive = await instance.saleActive.call();
-      assert.isTrue(saleActive);
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.isFalse(mintingFinished);
 
       return utils.shouldThrowVmException(instance.migrate.bind(instance, spender, balance));
     });
@@ -217,11 +211,11 @@ contract('MoedaToken', (accounts) => {
         instance.create.bind(instance, accounts[1], web3.toWei(500)));
     });
 
-    it('should throw an error when sale is not active', async () => {
+    it('should throw an error when fundraiser is not active', async () => {
       const instance = await MoedaToken.new(MINTER);
       await instance.unlock({ from: MINTER });
-      const saleActive = await instance.saleActive.call();
-      assert.isFalse(saleActive);
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.isTrue(mintingFinished);
 
       return utils.shouldThrowVmException(instance.create.bind(instance,
         accounts[1], web3.toWei(500), { from: MINTER }));
@@ -250,14 +244,14 @@ contract('MoedaToken', (accounts) => {
     it('should only allow minter to invoke', async () => {
       await utils.shouldThrowVmException(instance.unlock.bind(instance));
 
-      const saleActive = await instance.saleActive.call();
-      assert.strictEqual(saleActive, true);
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.strictEqual(mintingFinished, false);
     });
 
-    it('should set saleActive to false', async () => {
+    it('should set mintingFinished to false', async () => {
       await instance.unlock({ from: MINTER });
-      const saleActive = await instance.saleActive.call();
-      assert.strictEqual(saleActive, false, 'should be unlocked');
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.strictEqual(mintingFinished, true, 'should be unlocked');
     });
   });
 
@@ -266,9 +260,9 @@ contract('MoedaToken', (accounts) => {
       await instance.create(accounts[1], web3.toWei(1500), { from: MINTER });
     });
 
-    it('should throw when sale is active', async () => {
-      const saleActive = await instance.saleActive.call();
-      assert.isTrue(saleActive);
+    it('should throw when fundraiser is active', async () => {
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.isFalse(mintingFinished);
       return utils.shouldThrowVmException(
         instance.transfer.bind(instance,
           accounts[2], web3.toWei(10), { from: accounts[1] }));
@@ -277,8 +271,8 @@ contract('MoedaToken', (accounts) => {
     it('should not throw when transfers are unlocked', async () => {
       try {
         await instance.unlock({ from: MINTER });
-        const saleActive = await instance.saleActive.call();
-        assert.isFalse(saleActive);
+        const mintingFinished = await instance.mintingFinished.call();
+        assert.isTrue(mintingFinished);
 
         const amount = web3.toWei(15);
         await instance.transfer(
@@ -302,9 +296,9 @@ contract('MoedaToken', (accounts) => {
       await instance.create(accounts[1], web3.toWei(1500), { from: MINTER });
     });
 
-    it('should throw when sale is active', async () => {
-      const saleActive = await instance.saleActive.call();
-      assert.isTrue(saleActive);
+    it('should throw when fundraiser is active', async () => {
+      const mintingFinished = await instance.mintingFinished.call();
+      assert.isFalse(mintingFinished);
 
       await instance.approve(
         accounts[2], web3.toWei(100), { from: accounts[1] });
@@ -321,8 +315,8 @@ contract('MoedaToken', (accounts) => {
     it('should not throw when transfers are unlocked', async () => {
       try {
         await instance.unlock({ from: MINTER });
-        const saleActive = await instance.saleActive.call();
-        assert.isFalse(saleActive);
+        const mintingFinished = await instance.mintingFinished.call();
+        assert.isTrue(mintingFinished);
 
         await instance.approve(
           accounts[2], web3.toWei(100), { from: accounts[1] });

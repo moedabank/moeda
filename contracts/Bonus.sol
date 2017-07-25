@@ -2,14 +2,14 @@ pragma solidity ^0.4.11;
 
 import "zeppelin-solidity/contracts/ownership/Ownable.sol";
 
-contract ICrowdsale {
+contract IFundraiser {
     uint256 public tokensPerEth;
     function issue(address recipient, uint256 amount);
 }
 
 // Issuance of loyalty bonus for donors that participated in the old fundraiser
 contract Bonus is Ownable {
-  address public crowdsale;
+  address public fundraiser;
   bool public issuanceDone;
 
   // for ference
@@ -33,10 +33,10 @@ contract Bonus is Ownable {
     return donors.length;
   }
 
-  // Init donor array with all ether amounts of donations from old crowdsale
+  // Init donor array with all ether amounts of donations from old fundraiser
   function initDonors() external onlyOwner {
     require(donorCount() == 0);
-    require(crowdsale != address(0));
+    require(fundraiser != address(0));
     donors.push(Donation(0x55B30722d84ca292E4432f644F183D1986D2B8F9, 100000000000000000));
     donors.push(Donation(0x7AB6C31747049BBe34a19253c0abe5001cCBe8c6, 4900000000000000000));
     donors.push(Donation(0xF851ff5037212C716e91CD474252B86faCa7bb11, 2958098700000000000));
@@ -84,18 +84,18 @@ contract Bonus is Ownable {
     return (amount * rate) / 10**18;
   }
 
-  /// @dev set a new crowdsale address in which tokens will be issued
-  /// @param _sale a crowdsale address
-  function setCrowdsaleAddress(address _sale) external onlyOwner {
+  /// @dev set a new fundraiser address in which tokens will be issued
+  /// @param _fundraiser a fundraiser address
+  function setFundraiserAddress(address _fundraiser) external onlyOwner {
     require(!issuanceDone);
-    require(_sale != address(0));
-    crowdsale = _sale;
+    require(_fundraiser != address(0));
+    fundraiser = _fundraiser;
   }
 
   function initBonusRate() internal {
     require(bonusRate == 0); // not already initalized
-    ICrowdsale sale = ICrowdsale(crowdsale);
-    bonusRate = uint256(sale.tokensPerEth()) * bonusMultiplier;
+    IFundraiser fundraiserInstance = IFundraiser(fundraiser);
+    bonusRate = uint256(fundraiserInstance.tokensPerEth()) * bonusMultiplier;
     assert(bonusRate > 0);
   }
 
@@ -111,15 +111,15 @@ contract Bonus is Ownable {
   // Issue tokens to donors, can only be executed successfully once
   function createBonusTokens() external onlyOwner {
     require(donorCount() > 0 && bonusRate > 0);
-    require(crowdsale != address(0));
+    require(fundraiser != address(0));
     require(!issuanceDone);
     uint256 numDonors = donorCount();
-    ICrowdsale sale = ICrowdsale(crowdsale);
+    IFundraiser fundraiserInstance = IFundraiser(fundraiser);
 
     for (uint i = 0; i < numDonors; i++) {
       Donation storage donation = donors[i];
       uint256 tokenAmount = ethToTokens(donation.amount, bonusRate);
-      sale.issue(donation.donor, tokenAmount);
+      fundraiserInstance.issue(donation.donor, tokenAmount);
       LogBonusIssued(donation.donor, donation.amount, tokenAmount);
     }
 

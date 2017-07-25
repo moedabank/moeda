@@ -1,4 +1,4 @@
-const Crowdsale = artifacts.require('Crowdsale');
+const Fundraiser = artifacts.require('Fundraiser');
 const MoedaToken = artifacts.require('./MoedaToken');
 const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
 const utils = require('./utils');
@@ -8,7 +8,7 @@ const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 const centsPerEth = 26235;
 const assert = utils.assert;
 
-contract('Crowdsale', (accounts) => {
+contract('Fundraiser', (accounts) => {
   let TEST_WALLET;
   beforeEach(async () => {
     const instance = await Wallet.new(
@@ -22,7 +22,7 @@ contract('Crowdsale', (accounts) => {
     let tokenAmount;
 
     beforeEach(async () => {
-      instance = await Crowdsale.deployed();
+      instance = await Fundraiser.deployed();
       testToken = await MoedaToken.new(accounts[1]);
       tokenAmount = web3.toWei(150);
       await testToken.create(
@@ -56,7 +56,7 @@ contract('Crowdsale', (accounts) => {
   describe('constructor', () => {
     let instance;
     before(async () => {
-      instance = await Crowdsale.deployed();
+      instance = await Fundraiser.deployed();
     });
 
     it('should create a moedaToken instance', async () => {
@@ -75,7 +75,7 @@ contract('Crowdsale', (accounts) => {
       const startBlock = currentBlock + 10;
 
       try {
-        const instance = await Crowdsale.new(
+        const instance = await Fundraiser.new(
           accounts[0], startBlock, startBlock + 30, centsPerEth);
       } catch (error) {
         fail('should not have thrown')
@@ -87,7 +87,7 @@ contract('Crowdsale', (accounts) => {
       const startBlock = currentBlock + 10;
 
       try {
-        const instance = await Crowdsale.new(
+        const instance = await Fundraiser.new(
           0, startBlock, startBlock + 30, centsPerEth);
         fail('should have thrown');
       } catch (error) {
@@ -99,7 +99,7 @@ contract('Crowdsale', (accounts) => {
       const currentBlock = web3.eth.blockNumber;
 
       try {
-        const instance = await Crowdsale.new(
+        const instance = await Fundraiser.new(
           accounts[0], currentBlock - 1, currentBlock + 10);
         fail('should have thrown');
       } catch (error) {
@@ -113,7 +113,7 @@ contract('Crowdsale', (accounts) => {
         const startBlock = currentBlock + 5;
 
         try {
-          const instance = await Crowdsale.new(
+          const instance = await Fundraiser.new(
             accounts[0], startBlock, startBlock - 1, centsPerEth);
           fail('should have thrown');
         } catch (error) {
@@ -126,14 +126,14 @@ contract('Crowdsale', (accounts) => {
       assert.notStrictEqual(wallet, NULL_ADDRESS)
     });
 
-    it('should have a presale wallet address', async () => {
-      const presaleWallet = await instance.PRESALE_WALLET.call();
+    it('should have a prefunding wallet address', async () => {
+      const prefundingWallet = await instance.PREFUNDING_WALLET.call();
       assert.strictEqual(
-        presaleWallet,
+        prefundingWallet,
         '0x30B3C64d43e7A1E8965D934Fa96a3bFB33Eee0d2'.toLowerCase());
     });
 
-    it('should assign crowdsale finalised boolean', async () => {
+    it('should assign fundraiser finalised boolean', async () => {
       const finalised = await instance.finalised.call();
       assert.strictEqual(finalised, false);
     });
@@ -157,7 +157,7 @@ contract('Crowdsale', (accounts) => {
   describe('addIssuer', () => {
     let instance;
     beforeEach(async () => {
-      instance = await initUnstartedSale(TEST_WALLET);
+      instance = await initUnstartedFundraiser(TEST_WALLET);
     });
 
     it('should only allow owner to run', async () => {
@@ -166,7 +166,7 @@ contract('Crowdsale', (accounts) => {
           instance, TEST_WALLET, 100, { from: accounts[1] }));
     });
 
-    it('should throw if sale has been finalised', async () => {
+    it('should throw if fundraiser has been finalised', async () => {
       await fastForwardToBlock(instance, 'endBlock');
       await instance.finalise();
       await utils.shouldThrowVmException(
@@ -204,19 +204,19 @@ contract('Crowdsale', (accounts) => {
 
   describe('updateRate', () => {
     it('should only allow owner to call', async () => {
-      const instance = await Crowdsale.deployed();
+      const instance = await Fundraiser.deployed();
       await utils.shouldThrowVmException(
         instance.updateRate.bind(instance, 123, { from: accounts[1] }));
     });
 
     it('should throw if rate is zero', async () => {
-      const instance = await Crowdsale.deployed();
+      const instance = await Fundraiser.deployed();
       await utils.shouldThrowVmException(
         instance.updateRate.bind(instance, 0));
     });
 
     it('should throw if rate of change is greater than 50%', async () => {
-      const instance = await initUnstartedSale(TEST_WALLET);
+      const instance = await initUnstartedFundraiser(TEST_WALLET);
 
       // >50% increase
       await utils.shouldThrowVmException(
@@ -230,7 +230,7 @@ contract('Crowdsale', (accounts) => {
     });
 
     it('should update rates and log change', async () => {
-      const instance = await initUnstartedSale(TEST_WALLET);
+      const instance = await initUnstartedFundraiser(TEST_WALLET);
       await instance.updateRate(centsPerEth - 10);
       const tokenRate = await instance.tokensPerEth.call();
       assert.strictEqual(tokenRate.toString(10), '262250000000000000000');
@@ -244,7 +244,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('getAvailable()', () => {
     let instance;
-    beforeEach(async () => instance = await Crowdsale.deployed());
+    beforeEach(async () => instance = await Fundraiser.deployed());
 
     it('should return given amount if it is within cap', async () => {
       const decimals = await instance.TOKEN_MULTIPLIER.call();
@@ -275,7 +275,7 @@ contract('Crowdsale', (accounts) => {
   describe('publicIssued()', () => {
     it('should return total issued tokens minus issuer created tokens',
       async () => {
-        const instance = await initUnstartedSale(TEST_WALLET);
+        const instance = await initUnstartedFundraiser(TEST_WALLET);
         await instance.addIssuer(accounts[0], 1000);
         await instance.addIssuer(accounts[1], 1000);
         await fastForwardToBlock(instance, 'startBlock');
@@ -293,7 +293,7 @@ contract('Crowdsale', (accounts) => {
 
   describe('issue()', () => {
     it('should throw if amount is zero', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.addIssuer(accounts[2], 100);
       utils.shouldThrowVmException(
         instance.issue.bind(instance, accounts[1], 0, { from: accounts[2] }));
@@ -301,7 +301,7 @@ contract('Crowdsale', (accounts) => {
 
     it('should throw if requested token amount would exceed issuer cap',
     async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       const issuerCap = await instance.ISSUER_CAP.call();
       await instance.addIssuer(accounts[2], issuerCap);
       utils.shouldThrowVmException(
@@ -309,16 +309,16 @@ contract('Crowdsale', (accounts) => {
           instance, accounts[1], issuerCap.plus(1), { from: accounts[2] }));
     });
 
-    it('should throw if sale has been paused', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+    it('should throw if fundraiser has been paused', async () => {
+      const instance = await initStartedFundraiser(TEST_WALLET);
       instance.addIssuer(accounts[0], 123);
       await instance.pause();
       return utils.shouldThrowVmException(
         instance.issue.bind(instance, accounts[2], 123));
     });
 
-    it('should throw if sale has been finalised', async () => {
-      const instance = await initEndedSale(TEST_WALLET);
+    it('should throw if fundraiser has been finalised', async () => {
+      const instance = await initEndedFundraiser(TEST_WALLET);
       instance.addIssuer(accounts[0], 123);
       await instance.finalise();
       return utils.shouldThrowVmException(
@@ -326,42 +326,42 @@ contract('Crowdsale', (accounts) => {
     });
 
     it('should throw if sender isnt issuer', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       return utils.shouldThrowVmException(
         instance.issue.bind(instance, accounts[2], 123));
     });
 
     it('should create tokens and update totals', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       const issuerCap = await instance.ISSUER_CAP.call();
     });
   });
 
   describe('donate()', () => {
     it('should throw if sender is team wallet', async () => {
-      const instance = await initStartedSale(accounts[3]);
+      const instance = await initStartedFundraiser(accounts[3]);
       utils.shouldThrowVmException(
         instance.donate.bind(
           instance, accounts[1], { from: accounts[3], value: web3.toWei(3)})
       );
     });
 
-    it('should throw if sale has ended', async () => {
-      const instance = await initEndedSale(TEST_WALLET);
+    it('should throw if fundraiser has ended', async () => {
+      const instance = await initEndedFundraiser(TEST_WALLET);
       utils.shouldThrowVmException(
         instance.donate.bind(instance,
           accounts[1], { from: accounts[2], value: web3.toWei(5) }));
     });
 
-    it('should throw if sale has not started yet', async () => {
-      const instance = await initUnstartedSale(TEST_WALLET);
+    it('should throw if fundraiser has not started yet', async () => {
+      const instance = await initUnstartedFundraiser(TEST_WALLET);
       utils.shouldThrowVmException(
         instance.donate.bind(instance,
           accounts[1], { from: accounts[2], value: web3.toWei(5) }));
     });
 
-    it('should throw when sale is paused', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+    it('should throw when fundraiser is paused', async () => {
+      const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.pause();
       utils.shouldThrowVmException(
         instance.donate.bind(instance,
@@ -369,7 +369,7 @@ contract('Crowdsale', (accounts) => {
     });
 
     it('should throw if sender is an issuer', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.addIssuer(accounts[2], web3.toWei(5));
       utils.shouldThrowVmException(
         instance.donate.bind(instance,
@@ -377,7 +377,7 @@ contract('Crowdsale', (accounts) => {
     });
 
     it('should throw if donation is less than dust limit', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       const dustLimit = await instance.DUST_LIMIT.call();
       await instance.addIssuer(accounts[2], web3.toWei(100));
       utils.shouldThrowVmException(
@@ -387,7 +387,7 @@ contract('Crowdsale', (accounts) => {
 
     it('should refund remaining amount if we cannot honur full amount',
       async () => {
-        const instance = await initStartedSale(TEST_WALLET);
+        const instance = await initStartedFundraiser(TEST_WALLET);
         const rate = await instance.tokensPerEth.call();
         const publicCap = await instance.PUBLIC_CAP.call();
         const almostAllTokens = publicCap.minus(263);
@@ -414,7 +414,7 @@ contract('Crowdsale', (accounts) => {
       });
 
     it('should update total, create tokens, send funds to wallet', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       const amount = web3.toWei(150);
       const tokensPerEth = await instance.tokensPerEth.call();
       const multiplier = await instance.TOKEN_MULTIPLIER.call();
@@ -433,8 +433,8 @@ contract('Crowdsale', (accounts) => {
   });
 
   describe('when we recieve ether', () => {
-    it('should not throw when sale is active', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+    it('should not throw when fundraiser is active', async () => {
+      const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.sendTransaction({
         from: accounts[2], value: web3.toWei(123) });
     });
@@ -443,7 +443,7 @@ contract('Crowdsale', (accounts) => {
   describe('isSoldOut()', () => {
     let instance;
     beforeEach(async () => {
-      instance = await initStartedSale(TEST_WALLET);
+      instance = await initStartedFundraiser(TEST_WALLET);
     });
 
     it('should return true if both ISSUER and PUBLIC caps have been reached',
@@ -483,37 +483,37 @@ contract('Crowdsale', (accounts) => {
   });
 
   describe('finalise()', () => {
-    it('should throw when sale has not started',
+    it('should throw when fundraiser has not started',
       async () => {
-        const instance = await initUnstartedSale(TEST_WALLET);
+        const instance = await initUnstartedFundraiser(TEST_WALLET);
         return utils.shouldThrowVmException(
           instance.finalise.bind(instance, { from: accounts[0] }));
       });
 
-    it('should throw when sale is still running and cap has not been reached',
+    it('should throw when fundraiser is still running and cap has not been reached',
       async () => {
-        const instance = await initUnstartedSale(TEST_WALLET);
+        const instance = await initUnstartedFundraiser(TEST_WALLET);
         return utils.shouldThrowVmException(
           instance.finalise.bind(instance, { from: accounts[0] }));
       });
 
-    it('should throw if sale has already been finalised', async () => {
-      const instance = await initEndedSale(TEST_WALLET);
+    it('should throw if fundraiser has already been finalised', async () => {
+      const instance = await initEndedFundraiser(TEST_WALLET);
       await instance.finalise();
       return utils.shouldThrowVmException(
         instance.finalise.bind(instance, { from: accounts[0] }));
     });
 
-    it('should throw if sale has been paused', async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+    it('should throw if fundraiser has been paused', async () => {
+      const instance = await initStartedFundraiser(TEST_WALLET);
       await instance.pause();
       await fastForwardToBlock(instance, 'endBlock');
       return utils.shouldThrowVmException(instance.finalise.bind(instance));
     });
 
-    it('should finalise sale prematurely if all tokens have been sold',
+    it('should finalise fundraiser prematurely if all tokens have been sold',
     async () => {
-      const instance = await initStartedSale(TEST_WALLET);
+      const instance = await initStartedFundraiser(TEST_WALLET);
       const publicCap = await instance.PUBLIC_CAP.call();
       const issuerCap = await instance.ISSUER_CAP.call();
       const tokensPerEth = await instance.tokensPerEth.call();
@@ -530,17 +530,17 @@ contract('Crowdsale', (accounts) => {
       assert.isTrue(finalised);
     });
 
-    it('should assign presale tokens to presale wallet', async () => {
-      const instance = await initEndedSale(TEST_WALLET);
+    it('should assign prefunding tokens to prefunding wallet', async () => {
+      const instance = await initEndedFundraiser(TEST_WALLET);
       await instance.finalise({ from: accounts[0] });
 
       const tokenAddress = await instance.moedaToken.call();
       const token = MoedaToken.at(tokenAddress);
-      const presaleTokens = await instance.PRESALE_TOKEN_ALLOCATION.call();
-      const presaleWallet = await instance.PRESALE_WALLET.call();
-      const presaleWalletBalance = await token.balanceOf.call(presaleWallet);
+      const prefundingTokens = await instance.PREFUNDING_TOKEN_ALLOCATION.call();
+      const prefundingWallet = await instance.PREFUNDING_WALLET.call();
+      const prefundingWalletBalance = await token.balanceOf.call(prefundingWallet);
 
-      assert.equals(presaleWalletBalance, web3.toWei(5000000));
+      assert.equals(prefundingWalletBalance, web3.toWei(5000000));
 
       const TOKEN_MAX = await token.MAX_TOKENS.call();
       const totalSupply = await token.totalSupply.call();
@@ -548,9 +548,9 @@ contract('Crowdsale', (accounts) => {
       assert.equals(totalSupply, web3.toWei(5000000));
     });
 
-    it('should set crowd sale to closed and unlock tokens if cap reached',
+    it('should set crowd fundraiser to closed and unlock tokens if cap reached',
       async () => {
-        const instance = await initEndedSale(TEST_WALLET);
+        const instance = await initEndedFundraiser(TEST_WALLET);
         await instance.finalise({ from: accounts[0] });
 
         const finalised = await instance.finalised.call();
@@ -558,14 +558,14 @@ contract('Crowdsale', (accounts) => {
 
         const tokenAddress = await instance.moedaToken.call();
         const token = MoedaToken.at(tokenAddress);
-        const saleActive = await token.saleActive.call();
-        assert.isFalse(saleActive);
+        const mintingFinished = await token.mintingFinished.call();
+        assert.isTrue(mintingFinished);
       });
   });
 
   describe('setWallet', () => {
     let instance;
-    beforeEach(async () => instance = await initUnstartedSale(TEST_WALLET));
+    beforeEach(async () => instance = await initUnstartedFundraiser(TEST_WALLET));
 
     it('should throw if sender is not owner', async () => {
       await instance.pause();
@@ -573,7 +573,7 @@ contract('Crowdsale', (accounts) => {
         instance.setWallet.bind(instance, accounts[1], { from: accounts[1]}));
     });
 
-    it('should throw if sale has not been paused', async () => {
+    it('should throw if fundraiser has not been paused', async () => {
       return utils.shouldThrowVmException(
         instance.setWallet.bind(instance, accounts[1]));
     });
@@ -603,40 +603,40 @@ async function fastForwardToBlock(instance, blockAttributeName) {
   await utils.mineUntilBlock(web3, blockNumber);
 }
 
-async function initUnstartedSale(walletAddress, _centsPerEth = centsPerEth) {
+async function initUnstartedFundraiser(walletAddress, _centsPerEth = centsPerEth) {
   const blockNumber = web3.eth.blockNumber;
   const startBlock = blockNumber + 3;
-  const instance = await Crowdsale.new(
+  const instance = await Fundraiser.new(
     walletAddress, startBlock, startBlock + 8, _centsPerEth);
-  assert.isBelow(blockNumber, startBlock, 'sale should not have been started');
+  assert.isBelow(blockNumber, startBlock, 'fundraiser should not have been started');
 
   return instance;
 }
 
-async function initStartedSale(walletAddress) {
+async function initStartedFundraiser(walletAddress) {
   const blockNumber = web3.eth.blockNumber;
   const startBlock = blockNumber + 2;
   const endBlock = blockNumber + 10;
-  const instance = await Crowdsale.new(
+  const instance = await Fundraiser.new(
     walletAddress, startBlock, endBlock, centsPerEth);
   await utils.mineUntilBlock(web3, startBlock);
   const currentBlock = web3.eth.blockNumber;
   assert.isAtLeast(
-    currentBlock, startBlock, 'sale should have been started');
+    currentBlock, startBlock, 'fundraiser should have been started');
   assert.isBelow(
-    currentBlock, endBlock, 'sale should not have ended yet');
+    currentBlock, endBlock, 'fundraiser should not have ended yet');
   return instance;
 }
 
-async function initEndedSale(walletAddress) {
-  const instance = await initUnstartedSale(walletAddress);
+async function initEndedFundraiser(walletAddress) {
+  const instance = await initUnstartedFundraiser(walletAddress);
   const endBlock = await instance.endBlock.call();
   await fastForwardToBlock(instance, 'endBlock');
   const currentBlock = web3.eth.blockNumber;
-  assert.isAtLeast(currentBlock, endBlock, 'sale should have ended');
+  assert.isAtLeast(currentBlock, endBlock, 'fundraiser should have ended');
   return instance;
 }
 
 module.exports = {
-  initStartedSale,
+  initStartedFundraiser,
 };

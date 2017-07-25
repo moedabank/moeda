@@ -5,7 +5,7 @@ var abi = require('./oldAbi.json');
 
 const address = '0x4870E705a3def9DDa6da7A953D1cd3CCEDD08573';
 const oldFundraiser = web3.eth.contract(abi).at(address);
-const publicSaleMax = web3.toBigNumber(web3.toWei(5000000));
+const publicFundraiserMax = web3.toBigNumber(web3.toWei(5000000));
 const cutoffBlock = 4034787;
 const bittrexAddress = '0xfbb1b73c4f0bda4f67dca266ce6ef42f520fbb98';
 
@@ -47,6 +47,6 @@ function processAmounts(error, loggedDonations) {
   console.log('Transactions:', Object.keys(donations).length);
 }
 
-console.log('Fetching donations in previous crowdsale...');
+console.log('Fetching donations in previous fundraiser...');
 oldFundraiser.Purchase(
   null, { fromBlock: 3782416, toBlock: cutoffBlock }).get(processAmounts);

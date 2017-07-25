@@ -1,4 +1,4 @@
-# Moeda crowdsale contracts
+# Moeda fundraiser contracts
 
 To run the tests you need a recent version of node (probably at least 7.7.x) as this project is using async/await, and some ES2015+ syntax.
 
@@ -16,4 +16,4 @@ Note that just running `truffle test` with testrpc normally will not work, becau
 
 ### ETH/USD
 
-The ETH/USD rate in the contract will be updated during the sale via a script: https://github.com/erkmos/moeda-usd
+The ETH/USD rate in the contract will be updated during the fundraiser via a script: https://github.com/erkmos/moeda-usd

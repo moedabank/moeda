@@ -22,26 +22,21 @@ contract MoedaToken is StandardToken, Ownable {
   // don't allow creation of more than this number of tokens
   uint public constant MAX_TOKENS = 20000000 * 10**18;
 
-  // transfers are locked during the sale
-  bool public saleActive;
+  // transfers are locked during the fundraiser
+  bool public mintingFinished;
 
   // Log when tokens are migrated to a new contract
   event LogMigration(address indexed spender, address grantee, uint256 amount);
   event LogCreation(address indexed donor, uint256 tokensReceived);
   event LogDestruction(address indexed sender, uint256 amount);
 
-  modifier onlyAfterSale() {
-    require(!saleActive);
+  modifier afterMinting() {
+    require(mintingFinished);
     _;
   }
 
-  modifier onlyMinter() {
-    require(msg.sender == minter);
-    _;
-  }
-
-  modifier onlyDuringSale() {
-    require(saleActive);
+  modifier canMint() {
+    require(!mintingFinished && msg.sender == minter);
     _;
   }
 
@@ -50,12 +45,11 @@ contract MoedaToken is StandardToken, Ownable {
   function MoedaToken(address _minter) {
     require(_minter != address(0));
     minter = _minter;
-    saleActive = true;
   }
 
   /// @dev start a migration to a new contract
   /// @param agent address of contract handling migration
-  function setMigrationAgent(address agent) external onlyOwner onlyAfterSale {
+  function setMigrationAgent(address agent) external onlyOwner afterMinting {
     require(agent != address(0));
     require(migrationAgent == address(0));
     migrationAgent = MigrationAgent(agent);
@@ -63,7 +57,7 @@ contract MoedaToken is StandardToken, Ownable {
 
   /// @dev move a given amount of tokens a new contract (destroying them here)
   /// @param amount the number of tokens to migrate
-  function migrate(address beneficiary, uint256 amount) external onlyAfterSale {
+  function migrate(address beneficiary, uint256 amount) external afterMinting {
     require(beneficiary != address(0));
     require(migrationAgent != address(0));
     require(amount > 0);
@@ -88,16 +82,15 @@ contract MoedaToken is StandardToken, Ownable {
   }
 
   /// @dev unlock transfers
-  function unlock() external onlyMinter {
-    require(saleActive);
-    saleActive = false;
+  function unlock() external canMint {
+    require(!mintingFinished);
+    mintingFinished = true;
   }
 
-  /// @dev create tokens, only usable while saleActive
+  /// @dev create tokens, only usable while mintingFinished
   /// @param recipient address that will receive the created tokens
   /// @param amount the number of tokens to create
-  function create(address recipient, uint256 amount)
-  external onlyMinter onlyDuringSale {
+  function create(address recipient, uint256 amount) external canMint {
     require(amount > 0);
     require(totalSupply.add(amount) <= MAX_TOKENS);
 
@@ -107,16 +100,16 @@ contract MoedaToken is StandardToken, Ownable {
     LogCreation(recipient, amount);
   }
 
-  // only allowed after sale has ended
+  // only allowed after minting has ended
   function transfer(address _to, uint _value)
-  public onlyAfterSale returns (bool)
+  public afterMinting returns (bool)
   {
     return super.transfer(_to, _value);
   }
 
-  // only allowed after sale has ended
+  // only allowed after minting has ended
   function transferFrom(address from, address to, uint value)
-  public onlyAfterSale returns (bool)
+  public afterMinting returns (bool)
   {
     return super.transferFrom(from, to, value);
   }

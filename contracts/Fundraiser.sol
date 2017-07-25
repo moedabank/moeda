@@ -7,30 +7,30 @@ import './MoedaToken.sol';
 
 pragma solidity ^0.4.11;
 
-/// @title Moeda crowdsale
-contract Crowdsale is Ownable, Pausable, HasNoTokens {
+/// @title Moeda fundraiser
+contract Fundraiser is Ownable, Pausable, HasNoTokens {
   using SafeMath for uint256;
-  bool public finalised;          // Whether the crowdsale has been finalised
+  bool public finalised;          // Whether the fundraiser has been finalised
                                   // manually. Gives us an ability to verify
                                   // that everything is in order before enabling
                                   // token transfers.
-  address public wallet;          // recipient of all crowdsale funds
-  MoedaToken public moedaToken;   // token that will be sold during sale
+  address public wallet;          // recipient of all fundraiser funds
+  MoedaToken public moedaToken;   // token that will be sold during fundraiser
   uint256 public etherReceived;   // total ether received (for reference)
   uint256 public totalTokensSold; // total number of tokens sold
   uint256 public totalTokensIssued; // amount of tokens issued
   uint256 public totalAllocated;  // amount allocated to issuers
-  uint256 public startBlock;      // block where sale starts
-  uint256 public endBlock;        // block where sale ends
+  uint256 public startBlock;      // block where fundraiser starts
+  uint256 public endBlock;        // block where fundraiser ends
 
   // used to scale token amounts to 18 decimals
   uint256 public constant TOKEN_MULTIPLIER = 10**18;
 
-  // number of tokens allocated to presale (prior to crowdsale)
-  uint256 public constant PRESALE_TOKEN_ALLOCATION = 5000000 * TOKEN_MULTIPLIER;
+  // number of tokens allocated to prefunding (prior to fundraiser)
+  uint256 public constant PREFUNDING_TOKEN_ALLOCATION = 5000000 * TOKEN_MULTIPLIER;
 
-  // recipient of presale tokens
-  address public PRESALE_WALLET = 0x30B3C64d43e7A1E8965D934Fa96a3bFB33Eee0d2;
+  // recipient of prefunding tokens
+  address public PREFUNDING_WALLET = 0x30B3C64d43e7A1E8965D934Fa96a3bFB33Eee0d2;
 
   // smallest possible donation
   uint256 public constant DUST_LIMIT = 1 finney;
@@ -45,7 +45,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   uint256 public constant ISSUER_CAP = 10000000 * TOKEN_MULTIPLIER;
   uint256 public constant PUBLIC_CAP =  5000000 * TOKEN_MULTIPLIER;
 
-  // Addresses allowed to issue tokens during the sale
+  // Addresses allowed to issue tokens during the fundraiser
   mapping (address => uint256) public allocations;
   mapping (address => uint256) public tokensIssued;
 
@@ -71,24 +71,24 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     _;
   }
 
-  modifier onlyBeforeSale() {
+  modifier onlyBeforeFundraiser() {
     require(block.number < startBlock);
     _;
   }
 
-  modifier onlyDuringSale() {
+  modifier onlyDuringFundraiser() {
     require(!finalised);
     require(block.number >= startBlock);
     require(block.number < endBlock);
     _;
   }
 
-  /// @dev Initialize a new Crowdsale contract
+  /// @dev Initialize a new Fundraiser contract
   /// @param _wallet address of multisig wallet that will store received ether
-  /// @param _startBlock block at which to start the sale
-  /// @param _endBlock block at which to end the sale
+  /// @param _startBlock block at which to start the fundraiser
+  /// @param _endBlock block at which to end the fundraiser
   /// @param _centsPerEth initial US dollar price for 1 ETH in cents
-  function Crowdsale(
+  function Fundraiser(
     address _wallet, uint _startBlock, uint _endBlock, uint _centsPerEth
   ) {
     require(_wallet != address(0));
@@ -112,7 +112,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     }
   }
 
-  /// @dev Add a token issuer (e.g. for fiat sales)
+  /// @dev Add a token issuer (e.g. for fiat fundraisers)
   /// @param _address issuer's adress
   /// @param allocation amount of tokens issuer can create
   function addIssuer(address _address, uint256 allocation) external onlyOwner notFinalised {
@@ -160,7 +160,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   /// @dev issue tokens (e.g. for Bitcoin Suisse)
   /// @param recipient address that receives tokens
   /// @param amount number of tokens to be issued
-  /// Note: this can still be called after the public sale has ended as we want
+  /// Note: this can still be called after the public fundraiser has ended as we want
   /// to allow Bitcoin Suisse ample time to finish their allocations
   function issue(address recipient, uint256 amount)
   external notFinalised onlyIssuer whenNotPaused {
@@ -205,7 +205,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
   /// @dev process a donation
   /// @param recipient an address that will receive tokens
   function donate(address recipient)
-  public payable onlyDuringSale whenNotPaused notIssuer {
+  public payable onlyDuringFundraiser whenNotPaused notIssuer {
     require(msg.value >= DUST_LIMIT);
     require(msg.sender != wallet);
     require(recipient != address(0));
@@ -252,7 +252,7 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     return PUBLIC_CAP + ISSUER_CAP == totalTokensSold;
   }
 
-  /// @dev finalise the crowdsale manually and unlock token transfers
+  /// @dev finalise the fundraiser manually and unlock token transfers
   /// this will only be successful if:
   /// 1. Not already finalised, or
   /// 2. endBlock has been reached, or
@@ -261,12 +261,12 @@ contract Crowdsale is Ownable, Pausable, HasNoTokens {
     require(block.number > startBlock);
     require(!finalised);
 
-    // If all tokens have been sold before the end block we can allow the sale
+    // If all tokens have been sold before the end block we can allow the fundraiser
     // to end early
     require(block.number > endBlock || isSoldOut());
 
-    // create and assign presale allocation
-    moedaToken.create(PRESALE_WALLET, PRESALE_TOKEN_ALLOCATION);
+    // create and assign prefunding allocation
+    moedaToken.create(PREFUNDING_WALLET, PREFUNDING_TOKEN_ALLOCATION);
 
     // unlock tokens for spending
     moedaToken.unlock();
