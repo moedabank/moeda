@@ -1,8 +1,9 @@
 const Bonus = artifacts.require('Bonus');
-const Fundraiser = artifacts.require('Fundraiser');
 const MockFundraiser = artifacts.require('MockFundraiser');
 const initStartedFundraiser = require('./fundraiser').initStartedFundraiser;
 const utils = require('./utils');
+const donorBalances = require('./data/oldDonors.json');
+
 const assert = utils.assert;
 
 contract('Bonus', (accounts) => {
@@ -141,10 +142,20 @@ contract('Bonus', (accounts) => {
       const count = await instance.donorCount.call();
       const events = await utils.getAllEvents(instance, 'LogBonusIssued');
       assert.equals(events.length, count);
+      assert.equals(Object.keys(donorBalances).length, count);
 
-      for(let i = 0; i < count; i++) {
+      for (let i = 0; i < count; i += 1) {
+        // eslint-disable-next-line no-await-in-loop
         const donation = await instance.donors.call(i);
-        donation.donor
+        const amount = donation[1];
+        const donorAddress = web3.toChecksumAddress(donation[0]);
+        const expectedAmount = donorBalances[donorAddress];
+
+        if (!amount.eq(expectedAmount)) {
+          assert.fail(
+            `${donorAddress} balance should have been` +
+            `${expectedAmount} but was ${amount}`);
+        }
       }
     });
   });

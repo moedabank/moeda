@@ -1,5 +1,6 @@
 const assert = require('chai').assert;
 const Web3 = require('web3');
+
 const web3 = new Web3();
 
 let idCounter = 0;
@@ -49,6 +50,25 @@ const PatchedAssert = {
 
     return assert.equal(valueToCheck, valueToEqual, message);
   },
+};
+
+async function mineBlock() {
+  return new Promise((resolve, reject) => {
+    idCounter += 1;
+    const payload = {
+      jsonrpc: '2.0',
+      method: 'evm_mine',
+      id: idCounter,
+    };
+    web3.currentProvider.sendAsync(
+      payload,
+      (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve(result);
+      });
+  });
 }
 
 async function getAllEvents(instance, eventName) {
@@ -87,7 +107,7 @@ module.exports = {
       assert.include(error.message, 'invalid opcode');
     }
   },
-  async mineUntilBlock(web3, blockNumber) {
+  async mineUntilBlock(blockNumber) {
     const currentBlock = web3.eth.blockNumber;
     const blocksToGo = blockNumber - currentBlock;
 
@@ -95,7 +115,8 @@ module.exports = {
       return;
     }
 
-    for (let i = 0; i < blocksToGo; i++) {
+    for (let i = 0; i < blocksToGo; i += 1) {
+      // eslint-disable-next-line no-await-in-loop
       await mineBlock(web3);
     }
   },
@@ -103,16 +124,3 @@ module.exports = {
   getAllEvents,
   mineBlock,
 };
-
-async function mineBlock(web3) {
-  return new Promise((resolve, reject) => {
-    const payload = {
-      jsonrpc: "2.0",
-      method: "evm_mine",
-      id: ++idCounter,
-    };
-    web3.currentProvider.sendAsync(
-      payload,
-      (error, result) => error ? reject(error) : resolve(result));
-    });
-}

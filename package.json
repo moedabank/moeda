@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "node runTests.js",
-    "lint-contracts": "solium --dir contracts"
+    "lint-contracts": "solium --dir contracts",
+    "lint": "eslint 'test/*.js'"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,9 @@
   "homepage": "https://github.com/erkmos/moeda-contracts#readme",
   "devDependencies": {
     "chai": "4.1.0",
+    "eslint": "^4.3.0",
+    "eslint-config-airbnb-base": "^11.3.1",
+    "eslint-plugin-import": "^2.7.0",
     "ethereumjs-testrpc": "4.0.1",
     "truffle-core": "3.4.5",
     "web3": "0.19.1"

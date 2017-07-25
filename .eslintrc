@@ -1,0 +1,16 @@
+{
+  "extends": "airbnb-base",
+  "globals": {
+    "web3": false,
+    "artifacts": false,
+    "contract": true
+  },
+  "env": {
+    "node": true,
+    "mocha": true,
+    "es6": true
+  },
+  "rules": {
+    "no-underscore-dangle": 0
+  }
+}

@@ -1,7 +1,16 @@
 const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
 const MoedaToken = artifacts.require('MoedaToken');
 const utils = require('./utils');
+
 const assert = utils.assert;
+
+function numberPad(num) {
+  return web3._extend.utils.padLeft(web3.toHex(web3.toWei(num)).slice(2), 64);
+}
+
+function padAddress(address) {
+  return web3._extend.utils.padLeft(address.slice(2), 64);
+}
 
 contract('Wallet', (accounts) => {
   let token;
@@ -9,14 +18,14 @@ contract('Wallet', (accounts) => {
   beforeEach(async () => {
     wallet = await Wallet.new(accounts, 1, web3.toWei(12000));
     token = await MoedaToken.new(accounts[1]);
-    await token.create(wallet.address, web3.toWei(120000), { from: accounts[1]});
-    await token.create(accounts[3], web3.toWei(15000), { from: accounts[1]});
-    return token.unlock({ from: accounts[1]});
+    await token.create(wallet.address, web3.toWei(120000), { from: accounts[1] });
+    await token.create(accounts[3], web3.toWei(15000), { from: accounts[1] });
+    return token.unlock({ from: accounts[1] });
   });
 
   it('should be able to transfer tokens', async () => {
-    const methodId = web3.sha3('transfer(address,uint256)').slice(0,10);
-    const recipient = `000000000000000000000000${accounts[2].slice(2)}`
+    const methodId = web3.sha3('transfer(address,uint256)').slice(0, 10);
+    const recipient = `000000000000000000000000${accounts[2].slice(2)}`;
     const amount = numberPad(75000);
     const calldata = `${methodId}${recipient}${amount}`;
     await wallet.submitTransaction(token.address, 0, calldata);
@@ -52,7 +61,7 @@ contract('Wallet', (accounts) => {
 
   it('should be able to spend an allowance', async () => {
     const methodId = web3.sha3('transferFrom(address,address,uint256)').slice(0, 10);
-    const owner = padAddress(accounts[3])
+    const owner = padAddress(accounts[3]);
     const recipient = padAddress(accounts[1]);
     const amount = web3.toWei(6350);
     const encodedAmount = numberPad(6350);
@@ -66,11 +75,3 @@ contract('Wallet', (accounts) => {
     assert.equals(balance, amount);
   });
 });
-
-function numberPad(num) {
-  return web3._extend.utils.padLeft(web3.toHex(web3.toWei(num)).slice(2), 64);
-}
-
-function padAddress(address) {
-  return web3._extend.utils.padLeft(address.slice(2), 64);
-}
