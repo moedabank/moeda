@@ -229,6 +229,12 @@ contract('Fundraiser', (accounts) => {
         instance.addIssuer.bind(instance, accounts[1], issuerCap.plus(1)));
     });
 
+    it('should throw if there is a previous allocation', async () => {
+      await instance.addIssuer(TEST_WALLET, 100);
+      return utils.shouldThrowVmException(
+        instance.addIssuer.bind(instance, TEST_WALLET, 150));
+    });
+
     it('should add issuer address', async () => {
       const allocation = 100;
       await instance.addIssuer(TEST_WALLET, allocation);

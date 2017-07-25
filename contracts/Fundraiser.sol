@@ -117,6 +117,7 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   /// @param allocation amount of tokens issuer can create
   function addIssuer(address _address, uint256 allocation) external onlyOwner notFinalised {
     require(_address != address(0));
+    require(allocations[_address] == 0);
     require(allocation > 0);
     require(totalAllocated.add(allocation) <= ISSUER_CAP);
     allocations[_address] = allocation;
