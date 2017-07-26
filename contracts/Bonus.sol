@@ -37,7 +37,6 @@ contract Bonus is Ownable {
   // Init donor array with all ether amounts of donations from old fundraiser
   function initDonors() external onlyOwner {
     require(donorCount() == 0);
-    require(fundraiser != address(0));
     donors.push(Donation(0x55B30722d84ca292E4432f644F183D1986D2B8F9, 100000000000000000));
     donors.push(Donation(0x7AB6C31747049BBe34a19253c0abe5001cCBe8c6, 4900000000000000000));
     donors.push(Donation(0xF851ff5037212C716e91CD474252B86faCa7bb11, 2958098700000000000));
@@ -73,8 +72,6 @@ contract Bonus is Ownable {
     donors.push(Donation(0xE94aE3d286F693A313c7C8A0907c2f425ADb80C9, 84356750000000000));
     donors.push(Donation(0xAc3949c90Aca5e543114b242917426eF78dae650, 74766400000000000));
     donors.push(Donation(0x6541875114bEca413d016fb60B2Aa25e14604d20, 121800000000000000000));
-
-    initBonusRate();
   }
 
   /// @dev convert a given amount of eth to tokens
@@ -93,7 +90,8 @@ contract Bonus is Ownable {
     fundraiser = _fundraiser;
   }
 
-  function initBonusRate() internal {
+  function initBonusRate() external onlyOwner {
+    require(fundraiser != address(0));
     require(bonusRate == 0); // not already initalized
     IFundraiser fundraiserInstance = IFundraiser(fundraiser);
     bonusRate = uint256(fundraiserInstance.tokensPerEth()) * bonusMultiplier;

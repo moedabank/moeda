@@ -8,7 +8,7 @@ const assert = utils.assert;
 
 contract('Bonus', (accounts) => {
   describe('initDonors', () => {
-    it('should add donors and set bonus rate', async () => {
+    it('should add donors', async () => {
       const fundraiser = await MockFundraiser.new();
       const instance = await Bonus.new();
       const lenBefore = await instance.donorCount.call();
@@ -18,8 +18,6 @@ contract('Bonus', (accounts) => {
       await instance.initDonors();
 
       const lenAfter = await instance.donorCount.call();
-      const bonusRate = await instance.bonusRate.call();
-      assert.isAbove(bonusRate, 0);
       assert.isAbove(lenAfter, lenBefore);
     });
 
@@ -75,6 +73,7 @@ contract('Bonus', (accounts) => {
       const instance = await Bonus.new();
       await instance.setFundraiserAddress(fundraiser.address);
       await instance.initDonors();
+      await instance.initBonusRate();
       await fundraiser.addIssuer(instance.address, web3.toWei(100000));
       await instance.createBonusTokens();
 
@@ -97,11 +96,45 @@ contract('Bonus', (accounts) => {
     });
   });
 
+  describe('initBonusRate', () => {
+    let instance;
+    let fundraiser;
+    beforeEach(async () => {
+      instance = await Bonus.new();
+      fundraiser = await MockFundraiser.new();
+    });
+
+    it('should throw if fundraiser address is blank', () => (
+      utils.shouldThrowVmException(
+        instance.initBonusRate.bind(instance))));
+
+    it('should throw if bonus rate is non zero', async () => {
+      await instance.setFundraiserAddress(fundraiser.address);
+      await instance.initBonusRate();
+      return utils.shouldThrowVmException(
+        instance.initBonusRate.bind(instance));
+    });
+
+    it('should throw if resulting bonusrate is zero', async () => {
+      await instance.setFundraiserAddress(fundraiser.address);
+      await fundraiser.updateRate(0);
+      return utils.shouldThrowVmException(
+        instance.initBonusRate.bind(instance));
+    });
+
+    it('should set bonusrate', async () => {
+      await instance.setFundraiserAddress(fundraiser.address);
+      await instance.initBonusRate();
+      assert.isAbove(await instance.bonusRate.call(), 0);
+    });
+  });
+
   describe('numTokensToCreate', () => {
     it('should return num tokens that will be issued', async () => {
       const instance = await Bonus.new();
       const fundraiser = await MockFundraiser.new();
       await instance.setFundraiserAddress(fundraiser.address);
+      await instance.initBonusRate();
       await instance.initDonors();
       const tokens = await instance.numTokensToCreate();
 
@@ -118,6 +151,7 @@ contract('Bonus', (accounts) => {
     it('should throw before donor init', async () => {
       const instance = await Bonus.new();
       await instance.setFundraiserAddress(fundraiser.address);
+      await instance.initBonusRate();
       await fundraiser.addIssuer(instance.address, 123);
       return utils.shouldThrowVmException(
         instance.createBonusTokens.bind(instance));
@@ -127,6 +161,7 @@ contract('Bonus', (accounts) => {
       const instance = await Bonus.new();
       await fundraiser.addIssuer(instance.address, web3.toWei(100000));
       await instance.setFundraiserAddress(fundraiser.address);
+      await instance.initBonusRate();
       await instance.initDonors();
       await instance.createBonusTokens();
       return utils.shouldThrowVmException(
@@ -137,6 +172,7 @@ contract('Bonus', (accounts) => {
       const instance = await Bonus.new();
       await instance.setFundraiserAddress(fundraiser.address);
       await fundraiser.addIssuer(instance.address, web3.toWei(100000));
+      await instance.initBonusRate();
       await instance.initDonors();
       await instance.createBonusTokens();
       const count = await instance.donorCount.call();
