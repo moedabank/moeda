@@ -48,6 +48,7 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   // Addresses allowed to issue tokens during the fundraiser
   mapping (address => uint256) public allocations;
   mapping (address => uint256) public tokensIssued;
+  address[] public issuers; // for public reference
 
   // Log an update of the ETH/USD conversion rate in cents
   event LogRateUpdate(uint256 centsPerEth, uint256 tokensPerEth);
@@ -113,16 +114,17 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   }
 
   /// @dev Add a token issuer (e.g. for fiat fundraisers)
-  /// @param _address issuer's adress
+  /// @param issuer     issuer's address
   /// @param allocation amount of tokens issuer can create
-  function addIssuer(address _address, uint256 allocation) external onlyOwner notFinalised {
-    require(_address != address(0));
-    require(allocations[_address] == 0);
+  function addIssuer(address issuer, uint256 allocation) external onlyOwner notFinalised {
+    require(issuer != address(0));
+    require(allocations[issuer] == 0);
     require(allocation > 0);
     require(totalAllocated.add(allocation) <= ISSUER_CAP);
-    allocations[_address] = allocation;
+    allocations[issuer] = allocation;
     totalAllocated = totalAllocated.add(allocation);
-    LogIssuerAdded(_address, allocation);
+    issuers.push(issuer);
+    LogIssuerAdded(issuer, allocation);
   }
 
   /// @dev Get rate of change between current exchange rate and given rate
