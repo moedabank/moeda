@@ -8,8 +8,8 @@ const Bonus = artifacts.require('./Bonus');
 
 const TEST_WALLET = '0x98a321f414d67f186e30bdac641e5ecf990397ae';
 const REAL_WALLET = '0x42c1B347C470d746D096E3B1420A31B29F35291a';
-const START_TIME = Date.UTC(2017, 8, 28, 14, 0) / 1000;
-const END_TIME = Date.UTC(2017, 9, 28, 14, 0) / 1000;
+const START_TIME = Date.UTC(2017, 8, 28, 12, 0) / 1000;
+const END_TIME = Date.UTC(2017, 9, 28, 12, 0) / 1000;
 
 function testDeploy(deployer) {
   const currentBlock = web3.eth.blockNumber;
