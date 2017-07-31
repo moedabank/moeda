@@ -261,7 +261,7 @@ contract('Fundraiser', (accounts) => {
       await instance.addIssuer(accounts[1], 123);
       utils.shouldThrowVmException(
         instance.updateIssuer.bind(
-          instance, accounts[1], 5, { from: accounts[2] }))
+          instance, accounts[1], 5, { from: accounts[2] }));
     });
 
     it('should throw if sale has been finalised', async () => {
