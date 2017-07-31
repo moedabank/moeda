@@ -54,6 +54,7 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   event LogRateUpdate(uint256 centsPerEth, uint256 tokensPerEth);
   event LogDonation(address indexed donor, uint256 amount, uint256 tokens);
   event LogIssuerAdded(address indexed issuer, uint256 amount);
+  event LogIssuerUpdate(address issuer, uint256 oldAlloc, uint256 newAlloc);
   event LogIssuance(address indexed issuer, address recipient, uint256 amount);
   event LogFinalisation();
 
@@ -121,10 +122,42 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
     require(allocations[issuer] == 0);
     require(allocation > 0);
     require(totalAllocated.add(allocation) <= ISSUER_CAP);
+
+    setAllocation(issuer, allocation);
+    issuers.push(issuer);
+
+    LogIssuerAdded(issuer, allocation);
+  }
+
+  /// @dev update an existing issuer allocation
+  /// @param issuer     issuer's address
+  /// @param allocation new amount of tokens issuer can create
+  // Note: this should normally not be needed, but there might be a reason to
+  // change an allocation after the fact
+  function updateIssuer(address issuer, uint256 allocation)
+  external onlyOwner notFinalised {
+    require(allocations[issuer] > 0);
+
+    uint256 newAllocation = allocation;
+
+    // can not reduce a previous allocation below what has already been created
+    // by that issuer
+    if (allocation < tokensIssued[issuer]) {
+      newAllocation = tokensIssued[issuer];
+    }
+
+    // due to requirement that allocation >= tokensIssued we can just remove the
+    // full previous allocation
+    uint256 oldAllocation = allocations[issuer];
+    totalAllocated = totalAllocated.sub(oldAllocation);
+
+    setAllocation(issuer, newAllocation);
+    LogIssuerUpdate(issuer, oldAllocation, newAllocation);
+  }
+
+  function setAllocation(address issuer, uint256 allocation) internal {
     allocations[issuer] = allocation;
     totalAllocated = totalAllocated.add(allocation);
-    issuers.push(issuer);
-    LogIssuerAdded(issuer, allocation);
   }
 
   /// @dev Get rate of change between current exchange rate and given rate

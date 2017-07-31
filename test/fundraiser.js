@@ -246,6 +246,52 @@ contract('Fundraiser', (accounts) => {
     });
   });
 
+  describe('updateIssuer', () => {
+    let instance;
+    beforeEach(async () => {
+      instance = await initUnstartedFundraiser(TEST_WALLET);
+    });
+
+    it('should throw if issuer has no allocation', async () => (
+      utils.shouldThrowVmException(
+        instance.updateIssuer.bind(instance, accounts[1], 5))
+    ));
+
+    it('should throw if caller is not owner', async () => {
+      await instance.addIssuer(accounts[1], 123);
+      utils.shouldThrowVmException(
+        instance.updateIssuer.bind(
+          instance, accounts[1], 5, { from: accounts[2] }))
+    });
+
+    it('should throw if sale has been finalised', async () => {
+      await instance.addIssuer(accounts[1], 123);
+      await instance.setBlock(await instance.endBlock.call());
+      await instance.finalise();
+      utils.shouldThrowVmException(
+        instance.updateIssuer.bind(instance, accounts[1], 5));
+    });
+
+    it('should update allocation', async () => {
+      await instance.addIssuer(accounts[1], 123);
+      await instance.updateIssuer(accounts[1], 55);
+
+      const allocation = await instance.allocations.call(accounts[1]);
+
+      assert.equals(allocation, 55);
+    });
+
+    it('should not reduce allocation below what has been issued', async () => {
+      await instance.addIssuer(accounts[1], 123);
+      await instance.issue(accounts[2], 40, { from: accounts[1] });
+      await instance.updateIssuer(accounts[1], 35);
+
+      const allocation = await instance.allocations.call(accounts[1]);
+
+      assert.equals(allocation, 40);
+    });
+  });
+
   describe('updateRate', () => {
     it('should only allow owner to call', async () => {
       const instance = await Fundraiser.deployed();
