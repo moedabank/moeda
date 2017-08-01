@@ -28,7 +28,7 @@
     "eslint-plugin-import": "^2.7.0",
     "ethereumjs-testrpc": "4.0.1",
     "solium": "^0.5.4",
-    "truffle-core": "3.4.6",
+    "truffle-core": "3.4.7",
     "web3": "0.19.1"
   },
   "dependencies": {
