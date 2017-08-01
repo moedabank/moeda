@@ -1,4 +1,4 @@
-const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
+const Wallet = artifacts.require('MultiSigWallet');
 const MoedaToken = artifacts.require('MoedaToken');
 const utils = require('./utils');
 
@@ -16,7 +16,7 @@ contract('Wallet', (accounts) => {
   let token;
   let wallet;
   beforeEach(async () => {
-    wallet = await Wallet.new(accounts, 1, web3.toWei(12000));
+    wallet = await Wallet.new(accounts, 1);
     token = await MoedaToken.new(accounts[1]);
     await token.create(wallet.address, web3.toWei(120000), { from: accounts[1] });
     await token.create(accounts[3], web3.toWei(15000), { from: accounts[1] });

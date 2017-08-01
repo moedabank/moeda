@@ -1,6 +1,6 @@
 const Fundraiser = artifacts.require('TimeTravellingFundraiser');
 const MoedaToken = artifacts.require('./MoedaToken');
-const Wallet = artifacts.require('MultiSigWalletWithDailyLimit');
+const Wallet = artifacts.require('MultiSigWallet');
 const utils = require('./utils');
 
 const fail = utils.fail;
@@ -50,8 +50,7 @@ async function initEndedFundraiser(walletAddress) {
 contract('Fundraiser', (accounts) => {
   let TEST_WALLET;
   beforeEach(async () => {
-    const instance = await Wallet.new(
-      [accounts[0]], 1, web3.toWei(1000000000));
+    const instance = await Wallet.new([accounts[0]], 1);
     TEST_WALLET = instance.address;
   });
 
@@ -190,6 +189,17 @@ contract('Fundraiser', (accounts) => {
     it('should assign owner', async () => {
       const owner = await instance.owner.call();
       assert.strictEqual(owner, accounts[0]);
+    });
+  });
+
+  describe('getIssuers', () => {
+    it('should return an array of issuers', async () => {
+      const instance = await initUnstartedFundraiser(TEST_WALLET);
+      await instance.addIssuer(accounts[1], 2);
+      await instance.addIssuer(accounts[2], 2);
+
+      const issuers = await instance.getIssuers.call();
+      assert.deepEqual(issuers, [accounts[1], accounts[2]]);
     });
   });
 

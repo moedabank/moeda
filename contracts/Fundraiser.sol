@@ -114,6 +114,12 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
     }
   }
 
+  /// @dev returns list of issuers
+  /// @return list of issuer addresses
+  function getIssuers() external constant returns (address[]) {
+    return issuers;
+  }
+
   /// @dev Add a token issuer (e.g. for fiat fundraisers)
   /// @param issuer     issuer's address
   /// @param allocation amount of tokens issuer can create
@@ -134,6 +140,8 @@ contract Fundraiser is Ownable, Pausable, HasNoTokens {
   /// @param allocation new amount of tokens issuer can create
   // Note: this should normally not be needed, but there might be a reason to
   // change an allocation after the fact
+  // Note 2: for simplicity we don't delete and shuffle entries around when an
+  // issuers allocation is set to zero
   function updateIssuer(address issuer, uint256 allocation)
   external onlyOwner notFinalised {
     require(allocations[issuer] > 0);
