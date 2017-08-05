@@ -113,6 +113,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   }
 
   // tokens awarded to participants of previous (cancelled) fundraiser
+  // see getOldFundraiserAllocation.js for how these numbers were calculated
   function createBonusTokens() onlyOwner {
     require(!bonusTokensCreated);
     bonusTokensCreated = true;

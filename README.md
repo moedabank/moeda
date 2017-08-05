@@ -13,7 +13,3 @@ Note that just running `truffle test` with testrpc normally will not work, becau
 ### Known issues
 
 * The test suite sometimes crashes due to a snapshot bug in ethereumjs-testrpc.
-
-### ETH/USD
-
-The ETH/USD rate in the contract will be updated during the fundraiser via a script: https://github.com/erkmos/moeda-usd
