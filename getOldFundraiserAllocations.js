@@ -2,6 +2,7 @@ const Web3 = require('web3');
 
 const web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:8545'));
 const abi = require('./oldAbi.json');
+const { bonusTokensPerEth } = require('./src/constants');
 
 const contractAddress = '0x4870E705a3def9DDa6da7A953D1cd3CCEDD08573';
 const oldFundraiser = web3.eth.contract(abi).at(contractAddress);
@@ -33,15 +34,22 @@ function processAmounts(error, loggedDonations) {
   }
 
   let totalEthReceived = web3.toBigNumber(0);
+  let totalTokens = web3.toBigNumber(0);
   const donations = groupByAddress(loggedDonations);
 
   Object.keys(donations).forEach((address) => {
     const amount = donations[address];
     totalEthReceived = totalEthReceived.plus(amount);
-    console.log(`donors.push(Donation(${address}, ${amount}));`);
+    const tokens = amount.mul(bonusTokensPerEth);
+    totalTokens = totalTokens.add(tokens);
+    console.log(`create(${address}, ${tokens.toString(10)});`);
   });
 
   console.log('\nTotal received:', `${web3.fromWei(totalEthReceived)} ETH`);
+  console.log(
+    'Total tokens awarded:',
+    totalTokens.toString(10),
+    `(${web3.fromWei(totalTokens).toString(10)})`);
   console.warn('Total only includes donations before the cutoff block:', cutoffBlock);
   console.log('Transactions:', Object.keys(donations).length);
 }

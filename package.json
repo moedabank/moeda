@@ -32,8 +32,7 @@
     "web3": "0.19.1"
   },
   "dependencies": {
-    "eth-blocktime-estimate": "^0.2.3",
-    "moeda-usd": "^0.2.0",
+    "lodash": "^4.17.4",
     "zeppelin-solidity": "1.2.0"
   }
 }

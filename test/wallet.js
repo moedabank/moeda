@@ -17,7 +17,7 @@ contract('Wallet', (accounts) => {
   let wallet;
   beforeEach(async () => {
     wallet = await Wallet.new(accounts, 1);
-    token = await MoedaToken.new(accounts[1]);
+    token = await MoedaToken.new({ from: accounts[1] });
     await token.create(wallet.address, web3.toWei(120000), { from: accounts[1] });
     await token.create(accounts[3], web3.toWei(15000), { from: accounts[1] });
     return token.unlock({ from: accounts[1] });
