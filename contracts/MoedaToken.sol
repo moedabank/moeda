@@ -5,7 +5,7 @@ import 'zeppelin-solidity/contracts/ownership/HasNoTokens.sol';
 import './MigrationAgent.sol';
 
 
-/// @title Moeda Loaylty Points token contract
+/// @title Moeda Loyalty Points token contract
 contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   string public constant name = "Moeda Loyalty Points";
   string public constant symbol = "MDA";
