@@ -18,7 +18,8 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   uint256 public totalMigrated;
 
   // don't allow creation of more than this number of tokens
-  uint public constant MAX_TOKENS = 20000000 * 10**18;
+  uint constant TOKEN_MULTIPLIER = 10**uint256(decimals);
+  uint public constant MAX_TOKENS = 20000000 * TOKEN_MULTIPLIER;
 
   // transfers are locked during the fundraiser
   bool public mintingFinished;
@@ -46,8 +47,8 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
 
   /// @dev Create moeda token and lock transfers
   function MoedaToken() {
-    //create(TBD, 9000000 * 10**18); // bitcoin suisse
-    //create(TBD, 5000000 * 10**18); // presale
+    //create(TBD, 9000000 * TOKEN_MULTIPLIER); // bitcoin suisse
+    //create(TBD, 5000000 * TOKEN_MULTIPLIER); // presale
     //create(TBD, 5910805111441920000000000); // TBD
   }
 
