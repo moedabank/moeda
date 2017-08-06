@@ -34,6 +34,11 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
     _;
   }
 
+  modifier canTransfer(address recipient) {
+    require(mintingFinished && recipient != address(0));
+    _;
+  }
+
   modifier canMint() {
     require(!mintingFinished);
     _;
@@ -99,15 +104,17 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   }
 
   // only allowed after minting has ended
-  function transfer(address _to, uint _value)
-  public afterMinting returns (bool)
+  // note: transfers to null address not allowed, use burn(value)
+  function transfer(address to, uint _value)
+  public canTransfer(to) returns (bool)
   {
-    return super.transfer(_to, _value);
+    return super.transfer(to, _value);
   }
 
   // only allowed after minting has ended
+  // note: transfers to null address not allowed, use burn(value)
   function transferFrom(address from, address to, uint value)
-  public afterMinting returns (bool)
+  public canTransfer(to) returns (bool)
   {
     return super.transferFrom(from, to, value);
   }

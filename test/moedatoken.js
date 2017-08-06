@@ -267,6 +267,12 @@ contract('MoedaToken', (accounts) => {
           accounts[2], web3.toWei(10), { from: accounts[1] }));
     });
 
+    it('should throw if recipient is null address', async () => {
+      await instance.create(accounts[1], 100);
+      return utils.shouldThrowVmException(
+        instance.transfer.bind(instance, NULL_ADDRESS, 90, { from: accounts[1] }));
+    });
+
     it('should not throw when transfers are unlocked', async () => {
       try {
         await instance.unlock();
@@ -293,6 +299,14 @@ contract('MoedaToken', (accounts) => {
   describe('transferFrom()', () => {
     beforeEach(async () => {
       await instance.create(accounts[1], web3.toWei(1500));
+    });
+
+    it('should throw if recipient is null address', async () => {
+      await instance.create(accounts[1], 100);
+      await instance.approve(accounts[2], 90, { from: accounts[1] });
+      return utils.shouldThrowVmException(
+        instance.transferFrom.bind(
+          instance, accounts[1], NULL_ADDRESS, 90, { from: accounts[2] }));
     });
 
     it('should throw when fundraiser is active', async () => {
