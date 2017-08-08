@@ -45,7 +45,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
     _;
   }
 
-  /// @dev Create moeda token and lock transfers
+  /// @dev Create moeda token and assign partner allocations
   function MoedaToken() {
     //mint(TBD, 9000000 * TOKEN_MULTIPLIER); // Bitcoin Suisse
     //mint(TBD, 1500000 * TOKEN_MULTIPLIER); // Broota
