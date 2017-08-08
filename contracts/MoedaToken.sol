@@ -11,17 +11,17 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   string public constant symbol = "MDA";
   uint8 public constant decimals = 18;
 
-  // Used to be able to allow opt-in transfer of tokens to a new token contract
-  // This will be set sometime in the future if additional functionality needs
-  // be added.
+  // The migration agent is used to be to allow opt-in transfer of tokens to a
+  // new token contract. This could be set sometime in the future if additional
+  // functionality needs be added.
   MigrationAgent public migrationAgent;
   uint256 public totalMigrated;
 
-  // don't allow creation of more than this number of tokens
   uint constant TOKEN_MULTIPLIER = 10**uint256(decimals);
+  // don't allow creation of more than this number of tokens
   uint public constant MAX_TOKENS = 20000000 * TOKEN_MULTIPLIER;
 
-  // transfers are locked during the fundraiser
+  // transfers are locked during minting
   bool public mintingFinished;
   bool public bonusTokensCreated;
 
@@ -29,6 +29,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   event LogMigration(address indexed spender, address grantee, uint256 amount);
   event LogCreation(address indexed donor, uint256 tokensReceived);
   event LogDestruction(address indexed sender, uint256 amount);
+  event LogMintingFinished();
 
   modifier afterMinting() {
     require(mintingFinished);
@@ -91,6 +92,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   /// @dev unlock transfers
   function unlock() external onlyOwner canMint {
     mintingFinished = true;
+    LogMintingFinished();
   }
 
   /// @dev create tokens, only usable before minting has ended

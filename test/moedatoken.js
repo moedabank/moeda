@@ -242,7 +242,7 @@ contract('MoedaToken', (accounts) => {
       assert.strictEqual(mintingFinished, false);
     });
 
-    it('should set mintingFinished to false', async () => {
+    it('should set mintingFinished to true', async () => {
       await instance.unlock();
       const mintingFinished = await instance.mintingFinished.call();
       assert.strictEqual(mintingFinished, true, 'should be unlocked');
