@@ -1,7 +1,7 @@
 pragma solidity ^0.4.13;
-import 'zeppelin-solidity/contracts/token/StandardToken.sol';
-import 'zeppelin-solidity/contracts/ownership/Ownable.sol';
-import 'zeppelin-solidity/contracts/ownership/HasNoTokens.sol';
+import './vendored/openzeppelin/token/StandardToken.sol';
+import './vendored/openzeppelin/ownership/Ownable.sol';
+import './vendored/openzeppelin/ownership/HasNoTokens.sol';
 import './MigrationAgent.sol';
 
 
