@@ -1,5 +1,5 @@
 const Wallet = artifacts.require('MultiSigWallet');
-const MoedaToken = artifacts.require('MoedaToken');
+const MoedaToken = artifacts.require('TestMintingToken');
 const utils = require('./utils');
 
 const assert = utils.assert;

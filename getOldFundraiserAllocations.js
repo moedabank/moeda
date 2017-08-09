@@ -42,7 +42,7 @@ function processAmounts(error, loggedDonations) {
     totalEthReceived = totalEthReceived.plus(amount);
     const tokens = amount.mul(bonusTokensPerEth);
     totalTokens = totalTokens.add(tokens);
-    console.log(`create(${address}, ${tokens.toString(10)});`);
+    console.log(`mint(${address}, ${tokens.toString(10)});`);
   });
 
   console.log('\nTotal received:', `${web3.fromWei(totalEthReceived)} ETH`);

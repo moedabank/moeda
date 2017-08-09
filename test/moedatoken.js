@@ -1,4 +1,4 @@
-const MoedaToken = artifacts.require('./MoedaToken');
+const MoedaToken = artifacts.require('./TestMintingToken');
 const MockMigrationAgent = artifacts.require('./MockMigrationAgent');
 const utils = require('./utils');
 const bonusDonors = require('./data/oldDonors.json');
@@ -91,7 +91,7 @@ contract('MoedaToken', (accounts) => {
       await instance.setMigrationAgent(agent.address);
     });
 
-    it('should throw when fundraiser is still active', async () => {
+    it('should throw when minting is still active', async () => {
       const token = await MoedaToken.new(spender);
       const mintingFinished = await token.mintingFinished.call();
       assert.isFalse(mintingFinished);
@@ -204,12 +204,7 @@ contract('MoedaToken', (accounts) => {
           balance.plus(web3.toWei(500)).toString());
       });
 
-    it('should only allow owner to call', async () => (
-      utils.shouldThrowVmException(
-        instance.create.bind(
-          instance, accounts[1], web3.toWei(500), { from: accounts[2] }))));
-
-    it('should throw an error when fundraiser is not active', async () => {
+    it('should throw an error when minting is not active', async () => {
       const token = await MoedaToken.new();
       await token.unlock();
       const mintingFinished = await token.mintingFinished.call();
@@ -247,7 +242,7 @@ contract('MoedaToken', (accounts) => {
       assert.strictEqual(mintingFinished, false);
     });
 
-    it('should set mintingFinished to false', async () => {
+    it('should set mintingFinished to true', async () => {
       await instance.unlock();
       const mintingFinished = await instance.mintingFinished.call();
       assert.strictEqual(mintingFinished, true, 'should be unlocked');
@@ -259,7 +254,7 @@ contract('MoedaToken', (accounts) => {
       await instance.create(accounts[1], web3.toWei(1500));
     });
 
-    it('should throw when fundraiser is active', async () => {
+    it('should throw when minting is active', async () => {
       const mintingFinished = await instance.mintingFinished.call();
       assert.isFalse(mintingFinished);
       return utils.shouldThrowVmException(
@@ -309,7 +304,7 @@ contract('MoedaToken', (accounts) => {
           instance, accounts[1], NULL_ADDRESS, 90, { from: accounts[2] }));
     });
 
-    it('should throw when fundraiser is active', async () => {
+    it('should throw when minting is active', async () => {
       const mintingFinished = await instance.mintingFinished.call();
       assert.isFalse(mintingFinished);
 
