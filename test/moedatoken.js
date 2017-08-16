@@ -92,7 +92,7 @@ contract('MoedaToken', (accounts) => {
     });
 
     it('should throw when minting is still active', async () => {
-      const token = await MoedaToken.new(spender);
+      const token = await MoedaToken.new();
       const mintingFinished = await token.mintingFinished.call();
       assert.isFalse(mintingFinished);
 
