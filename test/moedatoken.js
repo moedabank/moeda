@@ -38,16 +38,16 @@ contract('MoedaToken', (accounts) => {
         token.setMigrationAgent.bind(token, agent.address));
     });
 
-    it('should throw if sender is not owner', async () => (
+    it('should throw if sender is not owner', () => (
       utils.shouldThrowVmException(
         instance.setMigrationAgent.bind(
           instance, agent.address, { from: accounts[1] }))));
 
-    it('should throw if argument is null address', async () => (
+    it('should throw if argument is null address', () => (
       utils.shouldThrowVmException(
         instance.setMigrationAgent.bind(instance, NULL_ADDRESS))));
 
-    it('should throw if argument is not a contract', async () => (
+    it('should throw if argument is not a contract', () => (
       utils.shouldThrowVmException(
         instance.setMigrationAgent.bind(instance, accounts[1]))));
 
@@ -130,18 +130,16 @@ contract('MoedaToken', (accounts) => {
 
     beforeEach(async () => {
       token = await MoedaToken.new();
-      token.create(accounts[3], balance);
+      return token.create(accounts[3], balance);
     });
 
-    it('should throw when amount is zero', async () => {
+    it('should throw when amount is zero', () => (
       utils.shouldThrowVmException(token.burn.bind(
-        token, 0, { from: accounts[3] }));
-    });
+        token, 0, { from: accounts[3] }))));
 
-    it('should throw when balance is less than amount', async () => {
+    it('should throw when balance is less than amount', () => (
       utils.shouldThrowVmException(
-        token.burn.bind(token, balance + 1, { from: accounts[3] }));
-    });
+        token.burn.bind(token, balance + 1, { from: accounts[3] }))));
 
     it('should reduce total supply and sender balance', async () => {
       const amountToBurn = 45;
