@@ -113,7 +113,7 @@ module.exports = {
       // only portable way to do this right now
       // if we used all gas there's a high probability that the contract call
       // threw an exception
-      if (usedAllGas(receipt)) {
+      if (await usedAllGas(receipt)) {
         throw new Error('invalid opcode');
       }
 
