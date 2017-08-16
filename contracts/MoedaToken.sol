@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.13;
 import './vendored/openzeppelin/token/StandardToken.sol';
 import './vendored/openzeppelin/ownership/Ownable.sol';
 import './vendored/openzeppelin/ownership/HasNoTokens.sol';
