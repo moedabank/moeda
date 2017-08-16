@@ -7,7 +7,6 @@ const _ = require('lodash');
 
 const assert = utils.assert;
 const fail = utils.fail;
-const assertVmException = utils.assertVmException;
 const NULL_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 contract('MoedaToken', (accounts) => {
@@ -35,42 +34,28 @@ contract('MoedaToken', (accounts) => {
 
     it('should throw if minting is active', async () => {
       const token = await MoedaToken.new();
-
-      try {
-        await token.setMigrationAgent(agent.address, { from: accounts[0] });
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(
+        token.setMigrationAgent.bind(token, agent.address));
     });
 
-    it('should throw if sender is not owner', async () => {
-      try {
-        await instance.setMigrationAgent(agent.address, { from: accounts[3] });
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
-    });
+    it('should throw if sender is not owner', async () => (
+      utils.shouldThrowVmException(
+        instance.setMigrationAgent.bind(
+          instance, agent.address, { from: accounts[1] }))));
 
-    it('should throw if argument is null address', async () => {
-      try {
-        await instance.setMigrationAgent(NULL_ADDRESS);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
-    });
+    it('should throw if argument is null address', async () => (
+      utils.shouldThrowVmException(
+        instance.setMigrationAgent.bind(instance, NULL_ADDRESS))));
+
+    it('should throw if argument is not a contract', async () => (
+      utils.shouldThrowVmException(
+        instance.setMigrationAgent.bind(instance, accounts[1]))));
 
     it('should throw if migrationAgent is already set', async () => {
       await instance.setMigrationAgent(agent.address);
 
-      try {
-        await instance.setMigrationAgent(NULL_ADDRESS);
-        assert.fail('should have thrown');
-      } catch (error) {
-        assertVmException(error);
-      }
+      return utils.shouldThrowVmException(
+        instance.setMigrationAgent.bind(instance, agent.address));
     });
 
     it('should assign migrationAgent attribute', async () => {

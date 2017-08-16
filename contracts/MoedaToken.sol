@@ -58,9 +58,15 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   /// @dev start a migration to a new contract
   /// @param agent address of contract handling migration
   function setMigrationAgent(address agent) external onlyOwner afterMinting {
-    require(agent != address(0));
+    require(agent != address(0) && isContract(agent));
     require(migrationAgent == address(0));
     migrationAgent = MigrationAgent(agent);
+  }
+
+  function isContract(address addr) internal constant returns (bool) {
+    uint256 size;
+    assembly { size := extcodesize(addr) }
+    return size > 0;
   }
 
   /// @dev move a given amount of tokens a new contract (destroying them here)
