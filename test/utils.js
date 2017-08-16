@@ -1,7 +1,9 @@
 const assert = require('chai').assert;
 const Web3 = require('web3');
+const { development } = require('../truffle.js').networks;
 
-const web3 = new Web3();
+const web3 = new Web3(new Web3.providers.HttpProvider(
+  `http://${development.host}:${development.port}`));
 
 let idCounter = 0;
 
@@ -91,6 +93,11 @@ async function getLatestEvent(instance, eventName) {
   return events[events.length - 1];
 }
 
+async function usedAllGas(data) {
+  const tx = await web3.eth.getTransaction(data.tx);
+  return tx.gas === data.receipt.gasUsed;
+}
+
 module.exports = {
   assert: Object.assign({}, assert, PatchedAssert),
   fail(message) {
@@ -101,7 +108,15 @@ module.exports = {
   },
   async shouldThrowVmException(fn) {
     try {
-      await fn();
+      const receipt = await fn();
+
+      // only portable way to do this right now
+      // if we used all gas there's a high probability that the contract call
+      // threw an exception
+      if (usedAllGas(receipt)) {
+        throw new Error('invalid opcode');
+      }
+
       assert.fail('should have thrown');
     } catch (error) {
       assert.include(error.message, 'invalid opcode');
