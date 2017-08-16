@@ -23,8 +23,7 @@ and those accounts need to have a balance of at least 50 ETH.
 
 Parity example
 ```
-~/parity/target/release/parity --chain dev --geth \
-  --unlock <list of accounts> --password password --rpcport 8945
+parity --chain dev --geth --unlock <list of accounts> --password password --rpcport 8945
 ```
 
 ### Known issues
