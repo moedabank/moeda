@@ -23,8 +23,10 @@ and those accounts need to have a balance of at least 50 ETH.
 
 Parity example
 ```
-parity --chain dev --geth --unlock <list of accounts> --password password --rpcport 8945
+parity --chain dev --geth --unlock <list of accounts> --password <password file> --rpcport 8945
 ```
+
+Where password file is a file with N passwords, one per line if you're unlocking N accounts.
 
 ### Known issues
 
