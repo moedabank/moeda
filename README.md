@@ -8,8 +8,6 @@ npm install
 npm test
 ```
 
-Note that just running `truffle test` with testrpc normally will not work, because the default balances of the accounts testrpc generates are too low for some of the tests.
-
 Furthermore if you want to run using `truffle test` you need to make sure that your testrpc instance is:
 
 1. Running on port 8945
