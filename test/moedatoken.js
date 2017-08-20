@@ -21,7 +21,23 @@ contract('MoedaToken', (accounts) => {
       assert.strictEqual(owner, accounts[0]);
     });
 
-    it('should set allocations');
+    it('should allocate tokens to partners and preico donors', async () => {
+      const suisse = await instance.balanceOf.call(
+        '0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa');
+      const icoage = await instance.balanceOf.call(
+        '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB');
+      const preico = await instance.balanceOf.call(
+        '0xb03DEA3Ece1B15583C3D471877ed082c61e61885');
+      const other = await instance.balanceOf.call(
+        '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC');
+      const supply = await instance.totalSupply.call();
+
+      assert.equals(suisse, web3.toWei(9000000));
+      assert.equals(icoage, web3.toWei(2000000));
+      assert.equals(preico, web3.toWei(5000000));
+      assert.equals(other, '3910805111441920000000000');
+      assert.equals(supply, '19910805111441920000000000');
+    });
   });
 
   describe('setMigrationagent', () => {
@@ -113,14 +129,14 @@ contract('MoedaToken', (accounts) => {
       const totalSupply = await instance.totalSupply.call();
       const totalMigrated = await instance.totalMigrated.call();
 
-      assert.strictEqual(newBalance.toNumber(), 1);
-      assert.strictEqual(agentBalance.toNumber(), amountMigrated);
-      assert.strictEqual(totalSupply.toNumber(), 1);
-      assert.strictEqual(totalMigrated.toNumber(), amountMigrated);
+      assert.equals(newBalance, 1);
+      assert.equals(agentBalance, amountMigrated);
+      assert.equals(totalSupply, '19910805111441920000000001');
+      assert.equals(totalMigrated, amountMigrated);
       const log = await utils.getLatestEvent(instance, 'LogMigration');
-      assert.strictEqual(log.spender, spender);
-      assert.strictEqual(log.grantee, recipient);
-      assert.strictEqual(log.amount.toNumber(), amountMigrated);
+      assert.equals(log.spender, spender);
+      assert.equals(log.grantee, recipient);
+      assert.equals(log.amount, amountMigrated);
     });
   });
 
@@ -143,10 +159,11 @@ contract('MoedaToken', (accounts) => {
 
     it('should reduce total supply and sender balance', async () => {
       const amountToBurn = 45;
+      const supplyBefore = await token.totalSupply.call();
       await token.burn(amountToBurn, { from: accounts[3] });
       const supply = await token.totalSupply.call();
       const newBalance = await token.balanceOf.call(accounts[3]);
-      assert.isTrue(supply.eq(balance - amountToBurn));
+      assert.isTrue(supply.eq(supplyBefore.sub(amountToBurn)));
       assert.isTrue(newBalance.eq(balance - amountToBurn));
 
       const event = await utils.getLatestEvent(token, 'LogDestruction');
@@ -159,7 +176,7 @@ contract('MoedaToken', (accounts) => {
       async () => {
         const maxTokens = await instance.MAX_TOKENS.call();
         const totalSupply = await instance.totalSupply.call();
-        assert.equals(totalSupply, 0);
+        assert.equals(totalSupply, '19910805111441920000000000');
 
         return utils.shouldThrowVmException(
           instance.create.bind(

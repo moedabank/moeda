@@ -18,7 +18,7 @@ contract('Wallet', (accounts) => {
   beforeEach(async () => {
     wallet = await Wallet.new(accounts, 1);
     token = await MoedaToken.new({ from: accounts[1] });
-    await token.create(wallet.address, web3.toWei(120000), { from: accounts[1] });
+    await token.create(wallet.address, web3.toWei(12000), { from: accounts[1] });
     await token.create(accounts[3], web3.toWei(15000), { from: accounts[1] });
     return token.unlock({ from: accounts[1] });
   });
@@ -26,28 +26,29 @@ contract('Wallet', (accounts) => {
   it('should be able to transfer tokens', async () => {
     const methodId = web3.sha3('transfer(address,uint256)').slice(0, 10);
     const recipient = `000000000000000000000000${accounts[2].slice(2)}`;
-    const amount = numberPad(75000);
+    const amount = numberPad(7500);
     const calldata = `${methodId}${recipient}${amount}`;
     await wallet.submitTransaction(token.address, 0, calldata);
     const balance = await token.balanceOf.call(accounts[2]);
 
-    assert.equals(balance, '75000000000000000000000');
+    assert.equals(balance, web3.toWei(7500));
   });
 
   it('should be able to create an allowance', async () => {
     const methodId = web3.sha3('approve(address,uint256)').slice(0, 10);
     const spender = `000000000000000000000000${accounts[2].slice(2)}`;
-    const amount = numberPad(75000);
+    const amount = numberPad(7500);
     const calldata = methodId + spender + amount;
     await wallet.submitTransaction(token.address, 0, calldata);
     const allowance = await token.allowance.call(wallet.address, accounts[2]);
-    assert.equals(allowance, '75000000000000000000000');
+    assert.equals(allowance, web3.toWei(7500));
 
+    const transferAmount = web3.toWei(7100);
     await token.transferFrom(
-      wallet.address, accounts[1], web3.toWei(71000), { from: accounts[2] });
+      wallet.address, accounts[1], transferAmount, { from: accounts[2] });
     const balance = await token.balanceOf.call(accounts[1]);
 
-    assert.equals(balance, '71000000000000000000000');
+    assert.equals(balance, transferAmount);
   });
 
   it('should be able to destroy owned tokens', async () => {
@@ -56,7 +57,7 @@ contract('Wallet', (accounts) => {
     const calldata = methodId + amount;
     await wallet.submitTransaction(token.address, 0, calldata);
     const balance = await token.balanceOf(wallet.address);
-    assert.equals(balance, '113650000000000000000000');
+    assert.equals(balance, web3.toWei(5650));
   });
 
   it('should be able to spend an allowance', async () => {
