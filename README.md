@@ -29,3 +29,7 @@ Where password file is a file with N passwords, one per line if you're unlocking
 ### Known issues
 
 * The test suite sometimes crashes due to a snapshot bug in ethereumjs-testrpc.
+
+### Security Audit
+
+A [security audit] of the contracts(https://github.com/BlockchainLabsNZ/moeda-contracts/blob/audit/audit.md) has been conducted by [Blockchain Labs](https://blockchainlabs.nz)
