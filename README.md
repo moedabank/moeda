@@ -32,4 +32,4 @@ Where password file is a file with N passwords, one per line if you're unlocking
 
 ### Security Audit
 
-A [security audit] of the contracts(https://github.com/BlockchainLabsNZ/moeda-contracts/blob/audit/audit.md) has been conducted by [Blockchain Labs](https://blockchainlabs.nz)
+A [security audit](https://github.com/BlockchainLabsNZ/moeda-contracts/blob/audit/audit.md) of the contracts has been conducted by [Blockchain Labs](https://blockchainlabs.nz)
