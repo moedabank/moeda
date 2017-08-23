@@ -15,6 +15,9 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   // new token contract. This could be set sometime in the future if additional
   // functionality needs be added.
   MigrationAgent public migrationAgent;
+
+  // used to ensure that a given address is an instance of a particular contract
+  uint256 constant AGENT_MAGIC_ID = 0x6e538c0d750418aae4131a91e5a20363;
   uint256 public totalMigrated;
 
   uint constant TOKEN_MULTIPLIER = 10**uint256(decimals);
@@ -58,6 +61,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   /// @param agent address of contract handling migration
   function setMigrationAgent(address agent) external onlyOwner afterMinting {
     require(agent != address(0) && isContract(agent));
+    require(MigrationAgent(agent).MIGRATE_MAGIC_ID() == AGENT_MAGIC_ID);
     require(migrationAgent == address(0));
     migrationAgent = MigrationAgent(agent);
   }

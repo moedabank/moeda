@@ -74,6 +74,12 @@ contract('MoedaToken', (accounts) => {
         instance.setMigrationAgent.bind(instance, agent.address));
     });
 
+    it('should throw if argument is not a MigrationAgent', async () => {
+      const fakeAgent = await MoedaToken.new();
+      return utils.shouldThrowVmException(
+        instance.setMigrationAgent.bind(instance, fakeAgent.address));
+    });
+
     it('should assign migrationAgent attribute', async () => {
       await instance.setMigrationAgent(agent.address);
       const agentAddress = await instance.migrationAgent.call();
