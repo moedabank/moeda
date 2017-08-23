@@ -73,6 +73,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   }
 
   /// @dev move a given amount of tokens a new contract (destroying them here)
+  /// @param beneficiary address that will get tokens in new contract
   /// @param amount the number of tokens to migrate
   function migrate(address beneficiary, uint256 amount) external afterMinting {
     require(beneficiary != address(0));
