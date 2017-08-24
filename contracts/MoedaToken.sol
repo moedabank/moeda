@@ -52,7 +52,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   /// @dev Create moeda token and assign partner allocations
   function MoedaToken() {
     mint(0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa, 9000000 * TOKEN_MULTIPLIER); // Bitcoin Suisse
-    mint(0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB, 2000000 * TOKEN_MULTIPLIER); // ICOage
+    mint(0xfAF0218e4e22508f59Fe4675714C10bdb4df6136, 2000000 * TOKEN_MULTIPLIER); // ICOage
     mint(0xb03DEA3Ece1B15583C3D471877ed082c61e61885, 5000000 * TOKEN_MULTIPLIER); // presale
     mint(0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC, 3910805111441920000000000); // TBD
   }

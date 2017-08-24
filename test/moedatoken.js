@@ -25,7 +25,7 @@ contract('MoedaToken', (accounts) => {
       const suisse = await instance.balanceOf.call(
         '0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa');
       const icoage = await instance.balanceOf.call(
-        '0xbBbBBBBbbBBBbbbBbbBbbbbBBbBbbbbBbBbbBBbB');
+        '0xfAF0218e4e22508f59Fe4675714C10bdb4df6136');
       const preico = await instance.balanceOf.call(
         '0xb03DEA3Ece1B15583C3D471877ed082c61e61885');
       const other = await instance.balanceOf.call(
