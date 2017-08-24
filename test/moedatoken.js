@@ -23,7 +23,7 @@ contract('MoedaToken', (accounts) => {
 
     it('should allocate tokens to partners and preico donors', async () => {
       const suisse = await instance.balanceOf.call(
-        '0xaAaAaAaaAaAaAaaAaAAAAAAAAaaaAaAaAaaAaaAa');
+        '0x5C3A181dF2B23f08e035316EDA185D7CE5644106');
       const icoage = await instance.balanceOf.call(
         '0xfAF0218e4e22508f59Fe4675714C10bdb4df6136');
       const preico = await instance.balanceOf.call(
