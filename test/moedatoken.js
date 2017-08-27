@@ -1,4 +1,5 @@
 const MoedaToken = artifacts.require('./TestMintingToken');
+const LiveToken = artifacts.require('./MoedaToken');
 const MockMigrationAgent = artifacts.require('./MockMigrationAgent');
 const utils = require('./utils');
 
@@ -19,12 +20,14 @@ contract('MoedaToken', (accounts) => {
     });
 
     it('should allocate tokens', async () => {
-      const other = await instance.balanceOf.call(
-        '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC');
-      const supply = await instance.totalSupply.call();
+      const token = await LiveToken.new();
+      const other = await token.balanceOf.call(
+        '0x2f37be861699b6127881693010596B4bDD146f5e');
+      const supply = await token.totalSupply.call();
+      const expectedAmount = web3.toWei(20000000);
 
-      assert.equals(other, '1');
-      assert.equals(supply, '1');
+      assert.equals(other, expectedAmount);
+      assert.equals(supply, expectedAmount);
     });
   });
 
