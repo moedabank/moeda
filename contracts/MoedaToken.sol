@@ -26,7 +26,6 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
 
   // transfers are locked during minting
   bool public mintingFinished;
-  bool public bonusTokensCreated;
 
   // Log when tokens are migrated to a new contract
   event LogMigration(address indexed spender, address grantee, uint256 amount);
