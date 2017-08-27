@@ -1,9 +1,6 @@
 const MoedaToken = artifacts.require('./TestMintingToken');
 const MockMigrationAgent = artifacts.require('./MockMigrationAgent');
 const utils = require('./utils');
-const bonusDonors = require('./data/oldDonors.json');
-const { bonusTokensPerEth } = require('../src/constants');
-const _ = require('lodash');
 
 const assert = utils.assert;
 const fail = utils.fail;
@@ -21,22 +18,13 @@ contract('MoedaToken', (accounts) => {
       assert.strictEqual(owner, accounts[0]);
     });
 
-    it('should allocate tokens to partners and preico donors', async () => {
-      const suisse = await instance.balanceOf.call(
-        '0x5C3A181dF2B23f08e035316EDA185D7CE5644106');
-      const icoage = await instance.balanceOf.call(
-        '0xfAF0218e4e22508f59Fe4675714C10bdb4df6136');
-      const preico = await instance.balanceOf.call(
-        '0xb03DEA3Ece1B15583C3D471877ed082c61e61885');
+    it('should allocate tokens', async () => {
       const other = await instance.balanceOf.call(
         '0xCcCCccccCCCCcCCCCCCcCcCccCcCCCcCcccccccC');
       const supply = await instance.totalSupply.call();
 
-      assert.equals(suisse, web3.toWei(9000000));
-      assert.equals(icoage, web3.toWei(2000000));
-      assert.equals(preico, web3.toWei(5000000));
-      assert.equals(other, '3910805111441920000000000');
-      assert.equals(supply, '19910805111441920000000000');
+      assert.equals(other, '1');
+      assert.equals(supply, '1');
     });
   });
 
@@ -137,7 +125,7 @@ contract('MoedaToken', (accounts) => {
 
       assert.equals(newBalance, 1);
       assert.equals(agentBalance, amountMigrated);
-      assert.equals(totalSupply, '19910805111441920000000001');
+      assert.equals(totalSupply, '2');
       assert.equals(totalMigrated, amountMigrated);
       const log = await utils.getLatestEvent(instance, 'LogMigration');
       assert.equals(log.spender, spender);
@@ -182,7 +170,7 @@ contract('MoedaToken', (accounts) => {
       async () => {
         const maxTokens = await instance.MAX_TOKENS.call();
         const totalSupply = await instance.totalSupply.call();
-        assert.equals(totalSupply, '19910805111441920000000000');
+        assert.equals(totalSupply, '1');
 
         return utils.shouldThrowVmException(
           instance.create.bind(
@@ -413,26 +401,6 @@ contract('MoedaToken', (accounts) => {
         accounts[1], accounts[2]);
       assert.strictEqual(
         web3.fromWei(allowance).toNumber(), 0);
-    });
-  });
-
-  describe('createBonusTokens', () => {
-    it('should throw if caller is not owner', () => (
-      utils.shouldThrowVmException(
-        instance.createBonusTokens.bind(instance, { from: accounts[1] }))));
-
-    it('should throw if already called', async () => {
-      await instance.createBonusTokens();
-      await utils.shouldThrowVmException(
-        instance.createBonusTokens.bind(instance));
-    });
-
-    it('should create the right amount of tokens', async () => {
-      await instance.createBonusTokens();
-      return Promise.all(_.map(bonusDonors, async (amount, donor) => {
-        const balance = await instance.balanceOf.call(donor);
-        assert.equals(balance, web3.toBigNumber(amount).mul(bonusTokensPerEth));
-      }));
     });
   });
 });
