@@ -55,7 +55,7 @@ contract MoedaToken is StandardToken, Ownable, HasNoTokens {
   }
 
   function issueTokens() internal {
-    mint(0xbe17d91c518f1743AA0556425421d59de0372766, MAX_TOKENS);
+    mint(0x2f37be861699b6127881693010596B4bDD146f5e, MAX_TOKENS);
   }
 
   /// @dev start a migration to a new contract
